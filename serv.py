@@ -16,22 +16,23 @@ from tornado.options import define, options
 
 # Define options
 define("port", default=8888, help="run on the given port", type=int)
+# BDD Configuration
 define("pgsql_host", default="127.0.0.1:5432", help="database host")
 define("pgsql_database", default="anavevodb", help="database name")
 define("pgsql_user", default="postgres", help="database user")
 define("pgsql_password", default="root", help="database password")
 
 # Define path to library directory
-path_library = "C:/Projets/Anavevo/Anavevo/library/"
+path_library = "C:/Projets/anavevo/data/library/"
 
+# Path to define the url used
 #path_url = "https://v-anavevo.upf.pf"
 path_url = "http://localhost:8888"
 
-#path_css = "/anavevo/css"
-path_css = "file:///C:\Projets\Anavevo\Anavevo\css"
+# Define the static path for css, js, img files
+path_static = "C:/Projets/anavevo/static/"
 
-#path_img = "/anavevo/img"
-path_img = "file:///C:/Projets/Anavevo/Anavevo/img"
+path_html = "C:/Projets/anavevo/html/"
 
 class LibraryHandler(tornado.web.RequestHandler):
     def get(self):
@@ -59,8 +60,9 @@ class LibraryHandler(tornado.web.RequestHandler):
                 
         print(dic_general)
         
-        self.render("library.html", path_url=path_url, path_css=path_css, path_img=path_img, 
-        label_user=label_user, dic_general=dic_general, list_collection_dir = list_collection_dir)
+        strHTMLPath = os.path.join(path_html, "library.html")
+        
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic_general=dic_general, list_collection_dir = list_collection_dir)
 
 class CollectionHandler(tornado.web.RequestHandler):
     def get(self, idCollection):
@@ -74,8 +76,9 @@ class CollectionHandler(tornado.web.RequestHandler):
         
         list_item_dir = listRepertoir(pathDirectoryCollection + "/item/")
         
-        self.render("collection.html", path_url=path_url, path_css=path_css, path_img=path_img, 
-        label_user=label_user, dic = dicCollection, list_item_dir = list_item_dir, idCollection=idCollection)
+        strHTMLPath = os.path.join(path_html, "collection.html")
+        
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic = dicCollection, list_item_dir = list_item_dir, idCollection=idCollection)
 
 class ItemHandler(tornado.web.RequestHandler):
     def get(self, idCollection, idItem):
@@ -96,8 +99,9 @@ class ItemHandler(tornado.web.RequestHandler):
 
         list_essence_dir = listRepertoir(pathDirectoryItem + "/essence/")
         
-        self.render("item.html", path_url=path_url, path_css=path_css, path_img=path_img, 
-        label_user=label_user, dic = dicItem, list_essence_dir = list_essence_dir, idCollection=idCollection, idItem=idItem, titleCollection=titleCollection)
+        strHTMLPath = os.path.join(path_html, "item.html")
+        
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic = dicItem, list_essence_dir = list_essence_dir, idCollection=idCollection, idItem=idItem, titleCollection=titleCollection)
 
 class EssenceHandler(tornado.web.RequestHandler):
     def get(self, idCollection, idItem, idEssence):
@@ -130,14 +134,19 @@ class EssenceHandler(tornado.web.RequestHandler):
             essence = None
 
         print(path_url)
-        self.render("essence.html", path_url=path_url, path_css=path_css, path_img=path_img, 
-        label_user=label_user, dic=dicEssence, idCollection=idCollection, idItem=idItem, idEssence=idEssence, name=essence, titleCollection=titleCollection, titleItem=titleItem)
+        
+        strHTMLPath = os.path.join(path_html, "essence.html")
+        
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic=dicEssence, idCollection=idCollection, idItem=idItem, 
+        idEssence=idEssence, name=essence, titleCollection=titleCollection, titleItem=titleItem)
 
 class LoginHandler(tornado.web.RequestHandler):
     def get(self):
         label_user = getCurrentCookie(self)
-        self.render("login.html", path_url=path_url, path_css=path_css, path_img=path_img, 
-        label_user=label_user, username=None, password=None, dicError=None)
+        
+        strHTMLPath = os.path.join(path_html, "login.html")
+        
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=None, password=None, dicError=None)
 
     def post(self):
         username = self.get_argument("username")
@@ -242,15 +251,19 @@ class LoginHandler(tornado.web.RequestHandler):
 class LoggedHandler(tornado.web.RequestHandler):
     def get(self):
         label_user = getCurrentCookie(self)
-        self.render("logged.html", path_url=path_url, path_css=path_css, path_img=path_img, 
-        label_user=label_user)
+        
+        strHTMLPath = os.path.join(path_html, "logged.html")
+        
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user)
         print(self.get_secure_cookie('username'))
 
 class LogoutHandler(tornado.web.RequestHandler):
     def get(self):
         self.clear_cookie("userlabel")
-        self.render("logout.html", path_url=path_url, path_css=path_css, path_img=path_img, 
-        label_user=None)
+        
+        strHTMLPath = os.path.join(path_html, "logout.html")
+        
+        self.render(strHTMLPath, path_url=path_url, label_user=None)
         
 class HomeHandler(tornado.web.RequestHandler):
 
@@ -258,9 +271,9 @@ class HomeHandler(tornado.web.RequestHandler):
         
         label_user = getCurrentCookie(self)
 
-        self.render("home.html", path_url=path_url, path_css=path_css, path_img=path_img, 
-        label_user=label_user, search_results = None)
-
+        strHTMLPath = os.path.join(path_html, "home.html")
+        
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user, search_results = None)
         
     def post(self):
 
@@ -318,8 +331,9 @@ class HomeHandler(tornado.web.RequestHandler):
              connection.close()
              print("PostGre connection is closed")
 
-        self.render("home.html", path_url=path_url, path_css=path_css, path_img=path_img, 
-        label_user=label_user, search_results = html_row)
+        strHTMLPath = os.path.join(path_html, "home.html")
+        
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user, search_results = html_row)
 
 
 def getCurrentCookie(self) :
@@ -405,7 +419,7 @@ def createJSONFile(arrJSONElement, arrJSONItem, arrJSONEssence, parentElementId,
 def make_app():
     
     settings = {
-        "static_path": "C:/Projets/Anavevo/Anavevo/",
+        "static_path": path_static,
         "cookie_secret": "MadmaxBouleDeGommeRadioStar$&%9744",
         "login_url": "/login",
         "xsrf_cookies": True,

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <script type="text/javascript" src="{{ static_url('js/anavevo.js') }}"></script>
+  <link rel="stylesheet" href="{{ static_url('css/style.css') }}" />
+  <link rel="stylesheet" href="{{ static_url('css/customstyle.css') }}" />
+  <link rel="icon" type="image/png" href="{{ static_url('img/icon.png') }}" />
+  <title>Anavevo</title>
+</head>
+
+<body>
+
+  <!-- Navbar -->
+  <div class="bg-dark fixed-top shadow">
+    <div class="container">
+      <div class="row">
+        <nav class="col navbar navbar-expand-lg navbar-dark">
+
+          <a class="navbar-brand" href={{ str(path_url) + "/home" }}>
+            <img src="{{ static_url('img/icon.png') }}" width="40" height="30" alt="Site logo">
+            Anavevo
+          </a>
+
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div id="navbarContent" class="collapse navbar-collapse">
+            <ul class="navbar-nav">
+              <li class="nav-item active">
+                <a class="nav-link" href={{ str(path_url) + "/home" }}>Accueil</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href={{ str(path_url) + "/library" }}>Bibliothèque</a>
+              </li>
+			  {% if label_user is None %}
+              <li class="nav-item">
+                <a class="nav-link" href={{ str(path_url) + "/login" }}>Se connecter</a>
+              </li>
+			  {% else %}
+			  <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" 
+                role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  {{ label_user }}
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+					<li><a class="dropdown-item" href={{ str(path_url) + "/logout" }}>Déconnexion</a></li>
+                </ul>
+              </li>
+			  {% end %}
+            </ul>
+          </div>
+
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contnue de la page -->
+  <div class="container">
+
+      <div class="my-4">marge</div>
+
+  	  <div class="my-4 p-2 text-center bg-light shadow">
+        <div class="border border-secondary m-4 p-3 rounded-3">
+          <h1 class="fw-bold">Bienvenue dans la bibliothèque </h1>
+        </div>
+        <div class="px-5 px-md-2">
+          <p class="lead">Cette bibliothèque contient des collections de documentation et des informations sur les personnes qui y sont intervenues</p>
+        </div>
+      </div>
+
+      <div id="library-container" class="mb-4 text-center">
+		<div id="library-title" style="text-align:left;">
+			<p>Bibliothèque</p>
+		</div>
+		<div id="library-table">
+			<table>
+				<tbody>
+					{% for collectionkey, dic_item in dic_general.items() %}
+					<tr>
+						<td>
+							<ul class="arbo-direction-column">
+								<div class="collection-container">
+									<div class="collection-navigation">
+										{% if len(dic_item) > 0 %}									
+										<div class="arrow-right" onclick="showArborescence(this)"></div>
+										{% else %}
+										<div class="no-arrow"></div>
+										{% end %}
+										<a href={{ str(path_url) + "/library/" + collectionkey + ".col" }} class="btn btn-outline-primary btn-lg m-3" role="button">
+											{{ collectionkey }}
+										</a>
+									</div>
+									{% for itemkey, dic_essence in dic_item.items() %}
+									<ul>
+										<div class="item-container-hide">
+											<div class="item-navigation">									
+												{% if len(dic_essence) > 0 %}
+												<div class="arrow-right" onclick="showArborescence(this)"></div>
+												{% else %}
+												<div class="no-arrow"></div>
+												{% end %}
+												<a href={{ str(path_url) + "/library/" + str(collectionkey) + "/" + str(itemkey) + ".ite" }} class="btn btn-outline-primary btn-lg m-3" role="button">
+												{{ itemkey }}
+												</a>
+											</div>
+											{% for essencekey, essencevalue in dic_essence.items() %}
+											<ul>
+												<div class="essence-navigation-hide">									
+													<a href={{ str(path_url) + "/library/" + str(collectionkey) + "/" + str(itemkey) + "/" + str(essencekey) + ".ess" }} class="btn btn-outline-primary btn-lg m-3" role="button">
+													  {{ essencekey }}
+													</a>
+												</div>
+											</ul>
+											{% end %}
+										</div>
+									</ul>
+									{% end %}
+								</div>
+							</ul>
+						</td>
+					</tr>
+					{% end %}			
+				</tbody>
+			</table>
+		</div>
+      </div>  
+  </div>
+
+  <!-- Pied de page -->
+  <div class="bg-light">
+    <div class="container">
+      <div class="row">
+        <div class="col my-2">
+          <ul class="list-inline text-center">
+            <li class="list-inline-item"><a href="#">À propos</a></li>
+            <li class="list-inline-item">&middot;</li>
+            <li class="list-inline-item"><a href="#">Vie privée</a></li>
+            <li class="list-inline-item">&middot;</li>
+            <li class="list-inline-item"><a href="#">Conditions d'utilisations</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option 1: Bootstrap Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+</body>
+</html>
