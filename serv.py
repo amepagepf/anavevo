@@ -23,7 +23,8 @@ define("pgsql_user", default="postgres", help="database user")
 define("pgsql_password", default="root", help="database password")
 
 # Define path to library directory
-path_library = "C:/Projets/anavevo/data/"
+path_data = "C:/Projets/anavevo/data/"
+path_library = os.path.join(path_data, "library/")
 
 # Path to define the url used
 #path_url = "https://v-anavevo.upf.pf"
@@ -312,10 +313,10 @@ class HomeHandler(tornado.web.RequestHandler):
             arrJSONEssence = cursor.fetchone()[0]
 
 
-            if not os.path.exists(path_library) :
-                os.mkdir(path_library)
+            if not os.path.exists(path_data) :
+                os.mkdir(path_data)
             # define path to design all the directory
-            parent_directory = os.path.join(path_library, "library/")
+            parent_directory = path_library
 
             # create directory if not exist
             if not os.path.exists(parent_directory) :
