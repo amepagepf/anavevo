@@ -1,0 +1,93 @@
+import tornado.ioloop
+import tornado.web
+from def_init import *
+
+
+path = "/ti/ti/dev/UPF/Anavevo/data/0257-IGS0048/"
+
+class ProjectHandler(tornado.web.RequestHandler):
+    def get(self):
+        list_sess = listRepertoir(path + "Sessions/")
+        list_pers = listRepertoir(path + "People/")
+        self.render("project.html", list_sess = list_sess, list_pers=list_pers)
+
+class SessionHandler(tornado.web.RequestHandler):
+    def get(self, id):
+        id = id[:-4] # Supr ".ses"
+        dic = dictSession(path + "Sessions/" + id + "/"+ id + ".session")
+        list_doc = listDocuments(path + "Sessions/" + id)
+        self.render("session.html", dic = dic, list_doc = list_doc, parent=id)
+
+class DocSessionHandler(tornado.web.RequestHandler):
+    def get(self, id, idd):
+        idd = idd [:-4] # Supr ".ses"
+        dic = dictDocument(path + "Sessions/"+ id +"/"+ idd +".meta")
+
+        # Test le type du fichier pour récupérer les metadatas 
+        if idd.endswith((".png",".jpg",".gif",".PNG",".JPG",".GIF")) :
+            meta = imageAttributes (path + "Sessions/"+ id +"/"+ idd)
+        elif idd.endswith((".mp3",".mp4",".MP4",".MP3")):
+            meta = mpAttributes(path + "Sessions/"+ id +"/"+ idd)
+        else : 
+            meta = {}
+
+        # Ajoute les metadatas du fichier au autres données 
+        dic.update(meta)
+
+        self.render("doc_session.html", dic = dic, name = idd, parent_name = id)
+
+class PersonHandler(tornado.web.RequestHandler):
+    def get(self, id):
+        id = id[:-5] # Supr ".pers"
+        dic = dictPerson(path + "People/"+ id + "/" + id + ".person")
+        list_doc = listDocuments(path + "People/"+ id)
+        self.render("person.html", dic = dic, list_doc = list_doc, parent=id)
+
+class DocPersonHandler(tornado.web.RequestHandler):
+    def get(self, id, idd):
+        idd = idd[:-5] # Supr ".pers"
+        dic = dictDocument(path + "People/"+ id +"/"+ idd +".meta")
+
+        # Test le type du fichier pour récupérer les metadatas 
+        if idd.endswith(".png") or idd.endswith(".jpg") or idd.endswith(".gif"):
+            meta = imageAttributes (path + "People/"+ id +"/"+ idd)
+        elif idd.endswith(".mp3") or idd.endswith(".mp4") :
+            meta = mpAttributes(path + "People/"+ id +"/"+ idd)
+        else : 
+            meta = {}
+
+        # Ajoute les metadatas du fichier au autres données 
+        dic.update(meta)
+
+        self.render("doc_person.html", dic = dic, name = idd, parent_name = id)
+
+class HomeHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.render("index.html")
+
+def make_app():
+    
+    settings = {
+        "static_path": "/ti/ti/dev/UPF/Anavevo/",
+        "cookie_secret": "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
+        "login_url": "/login",
+        "xsrf_cookies": True,
+    }
+    
+    return tornado.web.Application([
+        # Les parenthèses dans les regex permettent de délimiter les id qui vont transiter à traver les url
+        (r"/index", HomeHandler),
+        (r"/docPath", tornado.web.StaticFileHandler, dict(path=settings['static_path'])),
+        (r"/archives", ProjectHandler),
+        (r"/(.*)/(.*\.ses$)", DocSessionHandler),
+        (r"/(.*\.ses$)", SessionHandler),
+        (r"/(.*)/(.*\.pers$)", DocPersonHandler),
+        (r"/(.*\.pers$)", PersonHandler),
+        ], **settings)
+
+if __name__ == "__main__":
+
+    app = make_app()
+    app.listen(8888)
+    print("The server listening on port 8888")
+    tornado.ioloop.IOLoop.current().start()

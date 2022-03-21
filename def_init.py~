@@ -1,0 +1,172 @@
+import xml.etree.ElementTree as ET
+import os
+from PIL import Image
+from PIL.ExifTags import TAGS
+from tinytag import TinyTag
+
+# Retourne le XML d'une session sous forme de dict
+def dictSession(path) :
+	tree = ET.parse(path)
+	root = tree.getroot()
+
+	# Remplie le dict avec les enfants direct
+	dic = {}
+	for child in root:
+		dic[child.tag] = child.text
+
+	# Ajoute le contenues des balises complexes (qui contiennent des balises enfants)
+	dic = addComplexeChild(root, dic, "contributions", "contributor")
+	dic = addSimpleChild(root, dic,"AdditionalFields")
+	dic = addSimpleChild(root, dic,"CustomFields")
+
+	return dic
+
+# Retourne le XML d'un document sous forme de dict
+def dictDocument(path) :
+
+	tree = ET.parse(path)
+	root = tree.getroot()
+
+	# Remplie le dict avec les enfants direct
+	dic = {}
+	for child in root:
+		dic[child.tag] = child.text
+
+	dic = addComplexeChild(root, dic, "contributions", "contributor")
+	dic = addSimpleChild(root, dic, "CustomFields")
+
+	return dic
+
+# Retourne le XML d'une personne sous forme d'un dict
+def dictPerson(path) :
+
+	# Récupére les données du fichier XML
+	tree = ET.parse(path)
+	root = tree.getroot()
+
+	# Remplie le dict avec les enfants direct
+	dic = {}
+	for child in root:
+		dic[child.tag] = child.text
+
+	# Suprime les données vides ou non interessantes
+	dic.pop("languages", None)
+	dic.pop("contributions", None)
+
+	#dic = addSimpleChild(root, dic, "languages")
+	dic = addSimpleChild(root, dic, "CustomFields")
+
+	return dic
+
+# Créer un dict avec les balises enfants
+def addSimpleChild(root, dic, parentTag) :
+
+	# Recherche les enfants de parentTag
+	list_child = []
+	for c in root.iter(parentTag) :
+		for child in c :
+			list_child.append([child.tag, child.text])
+
+	# Si il y a des enfant, met le dic à jour
+	if list_child != [] :
+		dic[parentTag] = list_child
+
+	return dic
+
+# Créer une liste des balises enfants complexes (qui contiennent aussi des balises enfants)
+def addComplexeChild(root, dic, parentTag, complexeChild) :
+
+	# Recherche les enfants de contributor
+	list_complexe_child = []
+	list_child = []
+	for c in root.iter(complexeChild) :
+		for child in c :
+			list_child.append([child.tag,child.text])
+		list_complexe_child.append(list_child)
+		list_child = []
+
+	# Si il y a des enfant, met le dic à jour
+	if list_complexe_child != [] :
+		dic[parentTag] = list_complexe_child
+
+	return dic
+
+# Retourne la liste des session d'un projet
+def listRepertoir(path) :
+
+	return os.listdir(path)
+
+# Retourne la liste des documents d'une session
+def listDocuments(path) :
+	list_doc = []
+	for path in os.listdir(path) :
+		if path.endswith(".meta") :
+			list_doc.append(path[:-5])
+
+	return list_doc
+
+def imageAttributes(imagePath):
+
+	imageObject = Image.open(imagePath)
+
+	meta = { 
+		"Format" : imageObject.format,
+		"Mode" : imageObject.mode,
+		"x size (in px)" : imageObject.size[0], 
+		"y size (in px)" : imageObject.size[1]
+	}
+
+	supr = []
+	for key in meta.keys() :
+		if meta[key] == None :
+			supr.append(key)
+	
+	for key in supr :
+		del meta[key]
+
+	return meta
+
+def mpAttributes(contentPath) :
+
+	tag = TinyTag.get(contentPath)
+
+	meta = { 
+		"Bit rate (in Kbit/s)" : tag.bitrate, 
+		"Length (in s)" : tag.duration, 
+		"Size (in byts)" : tag.filesize, 
+		"Sample rate (in Hz)" : tag.samplerate, 
+		"Title" : tag.title, 
+		"Year" : tag.year
+	}
+	supr = []
+	for key in meta.keys() :
+		if meta[key] == None :
+			supr.append(key)
+	
+	for key in supr :
+		del meta[key]
+
+	return meta
+
+def donnees(path) :
+
+	image = Image.open(path)
+	exif = {}
+	
+	if image._getexif() != None :
+		for tag, value in image._getexif().items():
+		    if tag in TAGS:
+		        exif[TAGS[tag]] = value
+	
+	"""
+	exifdata = image.getexif()
+	for tag_id in exifdata :
+
+	    tag = TAGS.get(tag_id, tag_id)
+	    data = exifdata.get(tag_id)
+	    # decode bytes 
+	    if isinstance(data, bytes):
+	        data = data.decode()
+	    exif[tag] = data
+	"""
+	return exif

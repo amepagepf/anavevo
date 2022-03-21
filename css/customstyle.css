@@ -1,0 +1,95 @@
+.list-nostyled {
+  list-style: none;
+}
+
+.style-input {
+	border-radius: 6px;
+	padding: .65em;
+	border: 1px solid #caccce;
+}
+
+.login-button {
+	margin-top: 30px;
+}
+
+.search-results-container {
+	border: solid;
+	border-radius: 0.3rem;
+	border-width: thin;
+	box-sizing: content-box;
+	width: -moz-available;
+	display: flex;
+	flex-direction: column;
+	align-items: start;
+	padding-left: 10px;
+}
+
+.search-summary {
+	display: flex;
+	flex-direction: column;
+	align-items: start;
+}
+
+.collection-navigation {
+	display: flex;
+	flex-direction: row;
+}
+
+.collection-container {
+	display: flex;
+	flex-direction: column;
+}
+
+.item-navigation {
+	display: flex;
+	flex-direction: row;
+}
+
+.item-container {
+	display: flex;
+	flex-direction: column;
+}
+
+.item-container-hide {
+	display: none;
+}
+
+.item-container-show {
+	display: flex;
+	flex-direction: column;
+}
+
+.essence-navigation-hide {
+	display: none;
+}
+
+.essence-navigation-show {
+	display: flex;
+	margin-left: 10px;
+}
+
+.arrow-down {
+	width: 0;
+	height: 0;
+	border-left: 10px solid transparent;
+	border-right: 10px solid transparent;
+	border-top: 10px solid #000;
+	margin-top: 32px;
+	cursor: pointer;
+}
+
+.arrow-right {
+	width: 0; 
+	height: 0; 
+	border-top: 10px solid transparent;
+	border-bottom: 10px solid transparent;
+
+	border-left: 10px solid #000;	
+	margin-top: 32px;
+	cursor: pointer;
+	margin-left: 10px;
+}
+
+.no-arrow {
+	width: 20px;
+}
