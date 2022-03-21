@@ -2,14 +2,23 @@
 
 ## Installation de postgresql:
 
+### Windows
 * Télécharger postgresql: https://www.postgresql.org/download/
-* Installer postgresql
-* Définir un port et un mdp admin
-* Créer la base de donnée
-* Se placer au niveau des fichiers binaires de postgresql:
-cd C:\ProgramFiles\PostgreSQL\14\bin
-* Effectuer le dump restore de la bdd en invite commande: 
-psql.exe -U postgres -d databaseName -f C:\<fileNameLocation>
+* Installer postgresql via l'installeur
+* Le mot de passe du superutilisateur postgres doit être un mot de passe fort, conservez le mot de passe précieusement, et ne pas le fournir à quiconque de non confiance
+* Définir le numéro port de votre postgres si vous ne souhaitez pas le port par défaut 5432
+* Une fois l'installation terminée, lancer pgAdmin
+* Une fois dans l'interface pgAdmin, sur le navigateur à gauche, double-cliquer sur le serveur de la version postgresql désirée, et saisir le mot de passe renseigné du superutilisateur postgres au moment de l'installation
+* Une fois connecté, faire un clic-droit sur Databases et cliquer sur Create > Database ...
+* Choisir un nom pour la base de données puis valider
+* Se placer au niveau des fichiers binaires de votre version de postgresql là où postgresql a été installé, en invite commande ou PowerShell:
+`cd <cheminInstallation>PostgreSQL\14\bin` où cheminInstallation = `C:\ProgramFiles\` dans mon cas
+* Effectuer le dump restore du fichier de base de données '20220221anavevo.db' qui est situé dans le répertoire du projet github: 
+`psql.exe -U postgres -d databaseName -f <fileNameLocation>` où databaseName correspond au nom de la base de données créée précédemment et fileNameLocation = `C:\Projets\anavevo\20220221anavevo.db` dans mon cas, le mot de passe du superutilisateur postgres sera à renseigner pour valider le restore
+
+### Linux
+* bla
+* bla
 
 ## Installation de python:
 * Télécharger python: https://www.python.org/downloads/
