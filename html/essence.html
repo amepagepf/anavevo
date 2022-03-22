@@ -89,20 +89,20 @@
 			  <div class="col-11 col-md-8 mx-auto">
 				<iframe
 				  class="embed-responsive-item"
-				  src={{("../../../static/library/collection/"+str(idCollection)+"/item/"+str(idItem)+"/essence/"+str(idEssence)+"/"+name).replace(" ","%20")}}
+				  src="{{ static_url(("data/library/collection/" + str(idCollection) + "/item/" + str(idItem) + "/essence/" + str(idEssence) + "/" + name).replace(' ', '%20')) }}"
 				  frameborder="0"
 				  allowfullscreen>
 				</iframe>
 			  </div>
 			{% elif name.endswith((".png",".jpg",".gif",".PNG",".JPG",".GIF")) %}
 			  <div class="col-11 col-md-8 mx-auto">
-				<img class="w-100 shadow" src={{("../../../static/library/collection/"+str(idCollection)+"/item/"+str(idItem)+"/essence/"+str(idEssence)+"/"+name).replace(" ","%20")}} alt="Doc">
+				<img class="w-100 shadow" src="{{ static_url(("data/library/collection/" + str(idCollection) + "/item/" + str(idItem) + "/essence/" + str(idEssence) + "/" + name).replace(' ', '%20')) }}" alt="Doc">
 			  </div>
 			{% else %}
 			  <p class="border mx-auto border-secondary rounded p-3 col col-md-6">Pas d'aperçu disponible pour ce type de fichier </br>
 			  Lien de téléchargment du fichier ici : 
-			  <a href="{{("../../../static/library/collection/"+str(idCollection)+"/item/"+str(idItem)+"/essence/"+str(idEssence)+"/"+name).replace(" ","%20")}}"
-			  download={{("../../../static/library/collection/"+str(idCollection)+"/item/"+str(idItem)+"/essence/"+str(idEssence)+"/"+name).replace(" ","%20")}}>"Télécharger le fichier"</a>
+			  <a href="{{ static_url(("data/library/collection/" + str(idCollection) + "/item/" + str(idItem) + "/essence/" + str(idEssence) + "/" + name).replace(' ', '%20')) }}"
+			  download={{ static_url(("data/library/collection/" + str(idCollection) + "/item/" + str(idItem) + "/essence/" + str(idEssence) + "/" + name).replace(' ', '%20')) }}>"Télécharger le fichier"</a>
 			  </p>
 			{% end %}
 		{% else %}

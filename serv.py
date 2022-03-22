@@ -23,7 +23,8 @@ define("pgsql_user", default="postgres", help="database user")
 define("pgsql_password", default="root", help="database password")
 
 # Define path to library directory
-path_data = "C:/Projets/anavevo/data/"
+#path_data = "data/"
+path_data = "C:/Projets/anavevo/static/data/"
 path_library = os.path.join(path_data, "library/")
 
 # Path to define the url used
@@ -31,8 +32,11 @@ path_library = os.path.join(path_data, "library/")
 path_url = "http://localhost:8888"
 
 # Define the static path for css, js, img files
+#path_static = "static/"
 path_static = "C:/Projets/anavevo/static/"
 
+# Defini the html path for html files
+#path_html = "html/"
 path_html = "C:/Projets/anavevo/html/"
 
 class LibraryHandler(tornado.web.RequestHandler):
