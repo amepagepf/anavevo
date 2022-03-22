@@ -4,16 +4,24 @@
 
 .style-input {
 	border-radius: 6px;
-	padding: .65em;
+	padding: .67em;
 	border: 1px solid #caccce;
+	width: 100%;
+}
+.search-container {
+	margin: 5px;
 }
 
-.login-button {
+.search-form {
+	width: 100%;	
+}
+
+.search-input-container {
 	margin-top: 30px;
 }
 
 .search-results-container {
-	border: solid;
+	/*border: solid;*/
 	border-radius: 0.3rem;
 	border-width: thin;
 	box-sizing: content-box;
@@ -21,10 +29,18 @@
 	display: flex;
 	flex-direction: column;
 	align-items: start;
-	padding-left: 10px;
+	padding: 10px;
+	margin-top: 20px;
+	box-shadow: 0 0 5px #c3c0c0;
 }
 
 .search-summary {
+	display: flex;
+	flex-direction: column;
+	align-items: start;
+}
+
+.search-results {
 	display: flex;
 	flex-direction: column;
 	align-items: start;

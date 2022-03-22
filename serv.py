@@ -67,7 +67,7 @@ class LibraryHandler(tornado.web.RequestHandler):
         
         strHTMLPath = os.path.join(path_html, "library.html")
         
-        self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic_general=dic_general, list_collection_dir = list_collection_dir)
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic_general=dic_general)
 
 class CollectionHandler(tornado.web.RequestHandler):
     def get(self, idCollection):
@@ -76,14 +76,25 @@ class CollectionHandler(tornado.web.RequestHandler):
         idCollection = idCollection[:-4] # Supr ".col"
 
         pathDirectoryCollection = getPathDirectory(path_library, idCollection, "collection")
-        
+               
         dicCollection = dictJSONFile(pathDirectoryCollection + "/" + str(idCollection) + ".json")
         
+        dic_general = {}
+                
         list_item_dir = listRepertoir(pathDirectoryCollection + "/item/")
+        
+        for item_dir in list_item_dir :
+            dic_general[item_dir] = {}
+            pathDirectoryItem = getPathDirectory(pathDirectoryCollection, item_dir, "item")
+            
+            list_essence_dir = listRepertoir(pathDirectoryItem + "/essence/")
+            
+            for essence_dir in list_essence_dir :
+                dic_general[item_dir][essence_dir] = {}
         
         strHTMLPath = os.path.join(path_html, "collection.html")
         
-        self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic = dicCollection, list_item_dir = list_item_dir, idCollection=idCollection)
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic_general=dic_general, dicCollection=dicCollection, idCollection=idCollection)
 
 class ItemHandler(tornado.web.RequestHandler):
     def get(self, idCollection, idItem):

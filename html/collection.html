@@ -5,6 +5,7 @@
   <!-- Required meta tags -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <script type="text/javascript" src="{{ static_url('js/anavevo.js') }}"></script>
   <link rel="stylesheet" href="{{ static_url('css/style.css') }}" />
   <link rel="stylesheet" href="{{ static_url('css/customstyle.css') }}" />
   <link rel="icon" type="image/png" href="{{ static_url('img/icon.png') }}" />
@@ -66,41 +67,62 @@
 
       <div class="my-4 p-2 text-center bg-light shadow">
         <div class="border border-secondary m-4 p-3 rounded-3">
-          <h1>Collection : {{ dic["title"] }}</h1>
+          <h1>Collection : {{ dicCollection["title"] }}</h1>
         </div>
-        <h3>id : {{dic["id"]}}</h3>
+        <h3>id : {{dicCollection["id"]}}</h3>
         <div class="px-5 px-md-2">
-          <p><strong>description :</strong> {{ dic["description"] }}</p>
+          <p><strong>description :</strong> {{ dicCollection["description"] }}</p>
         </div>
       </div>
 
       <div class="mb-4 text-center">
         <h4>- Item -</h4>
-        <div class="row">
-          <div class="col">
-            {% if list_item_dir != [] %}
-              {% for item_dir in list_item_dir %}
-                <a href={{ str(path_url) + "/library/" + str(idCollection) + "/" + str(item_dir) + ".ite" }} class="btn btn-outline-primary btn-lg m-3" role="button">
-                  {{ item_dir }}
-                </a>
-              {% end %}
-            {% else %}
-              <p class="mt-4">Cette collection ne contient pas d'item</p>
-            {% end %}
-          </div>
-        </div>
-      </div>
+		<div id="collection-table">
+			<table>
+				<tbody>
+				{% for itemkey, dic_essence in dic_general.items() %}
+				<tr>
+					<td>
+						<ul class="arbo-direction-column">
+							<div class="item-container">
+								<div class="item-navigation">
+									{% if len(dic_essence) > 0 %}
+									<div class="arrow-right" onclick="showArborescence(this)"></div>
+									{% else %}
+									<div class="no-arrow"></div>
+									{% end %}
+									<a href={{ str(path_url) + "/library/" + str(idCollection) + "/" + str(itemkey) + ".ite" }} class="btn btn-outline-primary btn-lg m-3" role="button">
+									  {{ itemkey }}
+									</a>
+								</div>
+								{% for essencekey, essencevalue in dic_essence.items() %}
+								<ul>
+									<div class="essence-navigation-hide">									
+										<a href={{ str(path_url) + "/library/" + str(idCollection) + "/" + str(itemkey) + "/" + str(essencekey) + ".ess" }} class="btn btn-outline-primary btn-lg m-3" role="button">
+										  {{ essencekey }}
+										</a>
+									</div>
+								</ul>
+								{% end %}
+							</div>
+						</ul>
+					</td>
+				</tr>
+				{% end %}
+				</tbody>
+			</table>
+		</div>
 
       <div class="mb-4">
         <h4 class="text-center mb-4">- Desciption -</h4>
         <ul class="list-group">
-          {% for key in dic.keys() %}
-            {% if type(dic[key]) == list %}
+          {% for key in dicCollection.keys() %}
+            {% if type(dicCollection[key]) == list %}
 
-              {% if type(dic[key][0][0]) == list %}
+              {% if type(dicCollection[key][0][0]) == list %}
                 <li class="list-group-item">
                   <strong>{{ key }} :</strong><br/>
-                  {% for listElement in dic[key] %}
+                  {% for listElement in dicCollection[key] %}
                     ____________<br/>
                     {% for element in listElement %}
                       {{ element[0] }} : {{ element[1] }} <br/>
@@ -109,13 +131,13 @@
                 </li>
 
               {% else %}
-                {% for element in dic[key] %}
+                {% for element in dicCollection[key] %}
                   <li class="list-group-item"><strong>{{ element[0] }} : </strong>{{ element[1] }} </li>
                 {% end %}
               {% end %}
 
             {% else %}
-              <li class="list-group-item"><strong>{{ key }} : </strong>{{ dic[key] }}</li>
+              <li class="list-group-item"><strong>{{ key }} : </strong>{{ dicCollection[key] }}</li>
             {% end %}
           {% end %}
         </ul>
