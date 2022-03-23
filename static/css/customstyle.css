@@ -192,3 +192,11 @@
 	margin-left: -30px;
 	cursor: pointer;
 }
+
+#navbarContent .nav-item:last-of-type {
+	margin-left: auto;
+}
+
+.navbar-custom {
+	width:100%;
+}

@@ -11,7 +11,7 @@ import os
 import tempfile
 import requests
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 from def_init import *
 from tornado.options import define, options
 
@@ -40,10 +40,17 @@ path_static = "C:/Projets/anavevo/static/"
 #path_html = "html/"
 path_html = "C:/Projets/anavevo/html/"
 
-class LibraryHandler(tornado.web.RequestHandler):
+class BaseHandler(tornado.web.RequestHandler):
+    def get_current_user(self):
+        return self.get_secure_cookie("sessionid")
+
+class LibraryHandler(BaseHandler):
     def get(self):
         
-        label_user = getCurrentCookie(self)
+        if not self.current_user :
+            label_user = None
+        else :
+            label_user = getLabelUserFromCurrentCookie(self)
         
         dic_general = {}
         
@@ -70,10 +77,14 @@ class LibraryHandler(tornado.web.RequestHandler):
         
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic_general=dic_general)
 
-class CollectionHandler(tornado.web.RequestHandler):
+class CollectionHandler(BaseHandler):
     def get(self, idCollection):
 
-        label_user = getCurrentCookie(self)
+        if not self.current_user :
+            label_user = None
+        else :
+            label_user = getLabelUserFromCurrentCookie(self)
+            
         idCollection = idCollection[:-4] # Supr ".col"
 
         pathDirectoryCollection = getPathDirectory(path_library, idCollection, "collection")
@@ -97,10 +108,14 @@ class CollectionHandler(tornado.web.RequestHandler):
         
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic_general=dic_general, dicCollection=dicCollection, idCollection=idCollection)
 
-class ItemHandler(tornado.web.RequestHandler):
+class ItemHandler(BaseHandler):
     def get(self, idCollection, idItem):
 
-        label_user = getCurrentCookie(self)
+        if not self.current_user :
+            label_user = None
+        else :
+            label_user = getLabelUserFromCurrentCookie(self)
+            
         idItem = idItem[:-4] # Supr ".ite"
         print("item")
         print(idCollection)
@@ -120,10 +135,14 @@ class ItemHandler(tornado.web.RequestHandler):
         
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic = dicItem, list_essence_dir = list_essence_dir, idCollection=idCollection, idItem=idItem, titleCollection=titleCollection)
 
-class EssenceHandler(tornado.web.RequestHandler):
+class EssenceHandler(BaseHandler):
     def get(self, idCollection, idItem, idEssence):
 
-        label_user = getCurrentCookie(self)
+        if not self.current_user :
+            label_user = None
+        else :
+            label_user = getLabelUserFromCurrentCookie(self)
+            
         idEssence = idEssence [:-4] # Supr ".ess"
         print("essence")
         #print(idCollection)
@@ -156,17 +175,24 @@ class EssenceHandler(tornado.web.RequestHandler):
         
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic=dicEssence, idCollection=idCollection, idItem=idItem, 
         idEssence=idEssence, name=essence, titleCollection=titleCollection, titleItem=titleItem)
+      
+class LoginHandler(BaseHandler):
 
-class LoginHandler(tornado.web.RequestHandler):
     def get(self):
-        label_user = getCurrentCookie(self)
+        if not self.current_user :
+            label_user = None
+        else :
+            label_user = getLabelUserFromCurrentCookie(self)
         
         strHTMLPath = os.path.join(path_html, "login.html")
         
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=None, password=None, dicError=None)
 
     def post(self):
-        label_user = getCurrentCookie(self)
+        if not self.current_user :
+            label_user = None
+        else :
+            label_user = getLabelUserFromCurrentCookie(self)
     
         username = self.get_argument("username")
         password = self.get_argument("password")
@@ -211,7 +237,7 @@ class LoginHandler(tornado.web.RequestHandler):
             if booCheckUsernameExist == True :
                 sql_query = "SELECT id, username, firstname, lastname FROM papareo.user WHERE username = %s AND password = %s"
 
-                # Encodage + hash password à faire
+                # Encodage ou hash password à faire
                 cursor.execute(sql_query, (username, password))
                 print("query:")
                 print(cursor.query)
@@ -248,24 +274,8 @@ class LoginHandler(tornado.web.RequestHandler):
                     firstname = row[2]
                     lastname = row[3]
                     
-
-                    userlabel = str(firstname) + " " + str(lastname)
-
-                    date = datetime.now() + timedelta(minutes=1)
+                    # Function to create a session
                     
-                    print(date)
-                    
-                    timestamp = datetime.timestamp(date.now())
-                    print(timestamp)
-                    self.set_secure_cookie('userlabel', userlabel, expires_days=timestamp)
-                    self.set_secure_cookie('sessionid', str(userid), expires_days=timestamp)
-                    
-                    self.redirect('/logged')
-                    
-                else :
-                    
-                    strHTMLPath = os.path.join(path_html, "login.html")       
-                    self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=username, password=password, dicError=dicError)
                     
                     
         except psycopg2.Error as e:
@@ -280,29 +290,62 @@ class LoginHandler(tornado.web.RequestHandler):
         print("dicError")
         print(dicError)
         
+        if booCheckPasswordCorrect == True :
+            # The label of the user connected to display
+            userlabel = str(firstname) + " " + str(lastname)
 
-class LoggedHandler(tornado.web.RequestHandler):
+            # Define the timestamp expiration of the cookie
+            datetime_jour = datetime.now() 
+            delta_expiration = timedelta(minutes=5)
+            date_expiration = datetime_jour + delta_expiration
+                        
+            timestamp_expiration = float(date_expiration.timestamp())
+                        
+            self.set_secure_cookie('userlabel', userlabel, expires=timestamp_expiration)
+            self.set_secure_cookie('sessionid', str(userid), expires=timestamp_expiration)
+                        
+            self.redirect('/logged')
+                    
+        else :
+                    
+            strHTMLPath = os.path.join(path_html, "login.html")       
+            self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=username, password=password, dicError=dicError)
+        
+
+class LoggedHandler(BaseHandler):
     def get(self):
-        label_user = getCurrentCookie(self)
+        if not self.current_user :
+            label_user = None
+        else :
+            label_user = getLabelUserFromCurrentCookie(self)
         
         strHTMLPath = os.path.join(path_html, "logged.html")
         
         self.render(strHTMLPath, path_url=path_url, label_user=label_user)
         print(self.get_secure_cookie('username'))
 
-class LogoutHandler(tornado.web.RequestHandler):
+class LogoutHandler(BaseHandler):
     def get(self):
+        if not self.current_user :
+            label_user = None
+        else :
+            label_user = getLabelUserFromCurrentCookie(self)
+            
         self.clear_cookie("userlabel")
+        self.clear_cookie("sessionid")
         
         strHTMLPath = os.path.join(path_html, "logout.html")
         
         self.render(strHTMLPath, path_url=path_url, label_user=None)
         
-class HomeHandler(tornado.web.RequestHandler):
+class HomeHandler(BaseHandler):
 
     def get(self):
         
-        label_user = getCurrentCookie(self)
+        if not self.current_user :
+            label_user = None
+        else :
+            label_user = getLabelUserFromCurrentCookie(self)
 
         strHTMLPath = os.path.join(path_html, "home.html")
         
@@ -310,7 +353,10 @@ class HomeHandler(tornado.web.RequestHandler):
         
     def post(self):
 
-        label_user = getCurrentCookie(self)
+        if not self.current_user :
+            label_user = None
+        else :
+            label_user = getLabelUserFromCurrentCookie(self)
         
         search_input_text = self.get_argument("search-input-text")
 
@@ -371,7 +417,7 @@ class HomeHandler(tornado.web.RequestHandler):
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, search_results = html_row)
 
 
-def getCurrentCookie(self) :
+def getLabelUserFromCurrentCookie(self) :
 
     label_user = None
     if self.get_secure_cookie("userlabel") is not None :
