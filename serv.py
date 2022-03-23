@@ -165,6 +165,8 @@ class LoginHandler(tornado.web.RequestHandler):
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=None, password=None, dicError=None)
 
     def post(self):
+        label_user = getCurrentCookie(self)
+    
         username = self.get_argument("username")
         password = self.get_argument("password")
 
@@ -260,9 +262,11 @@ class LoginHandler(tornado.web.RequestHandler):
                 connection.close()
                 print("PostGre connection is closed")
 
-        #print("dicError")
-        #print(dicError)
-        #self.render("login.html", username=username, password=password, dicError=dicError)
+        print("dicError")
+        print(dicError)
+        strHTMLPath = os.path.join(path_html, "login.html")
+        
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=username, password=password, dicError=dicError)
 
 class LoggedHandler(tornado.web.RequestHandler):
     def get(self):

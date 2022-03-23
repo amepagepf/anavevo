@@ -8,6 +8,15 @@
 	border: 1px solid #caccce;
 	width: 100%;
 }
+
+.style-input-error {
+	border-radius: 6px;
+	padding: .67em;
+	border: 1px solid #caccce;
+	width: 100%;
+	border: 1px solid #d93025;
+}
+
 .search-container {
 	margin: 5px;
 }
@@ -108,4 +117,78 @@
 
 .no-arrow {
 	width: 20px;
+}
+
+.username-error-list {
+	height: 10px;
+	max-height: 10px;
+}
+
+.username-not-exist {
+	color: #d93025;
+}
+
+.username-input-container {
+	width: 100%;
+}
+
+.password-input-container {
+	width: 100%;
+}
+
+.password-error-list {
+	height: 10px;
+	max-height: 10px;
+	color: #d93025;
+}
+
+.form-login-container {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+.login-username-container {
+	max-width: 300px;
+	width: 100%;
+}
+
+.login-password-container {
+	margin-bottom: 40px;
+	max-width: 300px;
+	width: 100%;
+}
+
+.username-not-exist {
+	display: flex;
+	align-items: start;
+	padding-top: 2px;
+	margin-left: 6px;
+}
+
+.password-errors {
+	display: flex;
+	align-items: start;
+	padding-top: 2px;
+	margin-left: 6px;
+}
+
+.error-icon {
+	width: 18px;
+	height: 18px;
+	fill: #d93025;
+	margin-right: 4px;
+	display: flex;
+	align-self: center;
+}
+
+.password-input {
+	display: flex;
+	flex-direction: row;
+	width: 100%;
+}
+.toggle-eye {
+	align-self: center;
+	margin-left: -30px;
+	cursor: pointer;
 }

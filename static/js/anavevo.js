@@ -1,7 +1,5 @@
 function showArborescence(ieElement) {
 	
-	//console.log(ieElement);
-
 	var strClassName = ieElement.className;
 	var objParentElement = ieElement.parentElement;
 	
@@ -12,11 +10,6 @@ function showArborescence(ieElement) {
 		var objSubElement = objUlElement.firstElementChild;
 		
 		var strObjSubElementClassName = objSubElement.className;
-		/*console.log(objParentElement);
-		console.log(strClassName);
-		console.log(objUlElement);
-		console.log(objSubElement);
-		console.log(strObjSubElementClassName);*/
 			
 		var intIndexOf = 0;
 		var strNewClassName = null;
@@ -34,7 +27,24 @@ function showArborescence(ieElement) {
 		}
 		
 		objUlElement = objUlElement.nextElementSibling;
-		//console.log(objUlElement);
 	}
-	//console.log(objSubElement.className);
 }
+
+
+function toggleEye(ieElement) {
+
+	var objInputPassword = ieElement.previousElementSibling;
+
+	if (objInputPassword.type == "password") {
+		objInputPassword.type = "text";
+		ieElement.className = "fa-solid fa-eye toggle-eye";
+	} else {
+		objInputPassword.type = "password";
+		ieElement.className = "fa-solid fa-eye-slash toggle-eye";		
+	}
+}
+
+
+
+
+

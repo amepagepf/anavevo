@@ -5,9 +5,11 @@
   <!-- Required meta tags -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <script type="text/javascript" src="{{ static_url('js/anavevo.js') }}"></script>
   <link rel="stylesheet" href="{{ static_url('css/style.css') }}" />
   <link rel="stylesheet" href="{{ static_url('css/customstyle.css') }}" />
   <link rel="icon" type="image/png" href="{{ static_url('img/icon.png') }}" />
+  <link rel="stylesheet" href="{{ static_url('css/fontawesome/css/all.css') }}" />
   <title>Anavevo</title>
 </head>
 
@@ -71,39 +73,41 @@
 				<p class="lead">Connexion</p>
 			</div>
 			<div class="d-flex flex-column align-items-center login-container">
-				<form method="POST">
+				<form class="form-login-container" method="POST">
 					{% module xsrf_form_html() %}
 					<div class="d-flex flex-column mt-3 login-username-container">
 						<div class="d-flex flex-column align-items-start username-input-container">
 							<label for="username-input">Identifiant : </label>
-							<input id="username-input" class="style-input" type="text" placeholder="Nom d'utilisateur ou email" name="username" value="{% if username is not None %}{{ username }}{% end %}" required>
-						</div>
-						{% if dicError is not None %}
+							<input id="username-input" class="{% if dicError is not None and dicError['username-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="text" placeholder="Nom d'utilisateur ou email" name="username" value="{% if username is not None %}{{ username }}{% end %}" required>
+						</div>						
 						<div class="username-error-list">
-							{% if dicError["username-errors"] is not None %}
+							{% if dicError is not None and dicError["username-errors"] is not None %}						
 							<div class="username-not-exist">
-								<p>{{ dicError["username-errors"] }}</p>
+								<i class="fa-solid fa-circle-exclamation error-icon"></i>
+								<span class="mb-1">{{ dicError["username-errors"] }}</span>
 							</div>
-							{% end %}
+							{% end %}							
 						</div>
-						{% end %}
+						
 					</div>
 					<div class="d-flex flex-column mt-3 login-password-container">
 						<div class="d-flex flex-column align-items-start password-input-container">
 							<label for="password-input">Mot de passe : </label>
-							<input id="password-input" class="style-input" type="text" placeholder="Mot de passe" name="password" value="{% if password is not None %}{{ password }}{% end %}" required>
+							<div class="password-input">
+								<input id="password-input" class="{% if dicError is not None and dicError['password-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="password" placeholder="Mot de passe" name="password" value="{% if password is not None %}{{ password }}{% end %}" required>
+								<i class="fa-solid fa-eye-slash toggle-eye" onclick="toggleEye(this)" id="togglePassword"></i>
+							</div>
 						</div>
-						{% if dicError is not None %}
 						<div class="password-error-list">
-							{% if dicError["password-errors"] is not None %}
+							{% if dicError is not None and dicError["password-errors"] is not None %}
 							<div class="password-errors">
-								<p>{{ dicError["password-errors"] }}</p>
+								<i class="fa-solid fa-circle-exclamation error-icon"></i>
+								<span class="mb-1">{{ dicError["password-errors"] }}</span>
 							</div>
 							{% end %}
 						</div>
-						{% end %}
 					</div>
-					<div class="login-button mt-4">
+					<div class="login-button">
 						<button type="submit" value="send" class="btn btn-outline-primary btn-lg mb-3" role="button">Se connecter</button>
 					</div>
 				</form>
