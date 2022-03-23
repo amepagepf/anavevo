@@ -72,9 +72,7 @@ class LibraryHandler(BaseHandler):
                 
                 for essence_dir in list_essence_dir :
                     dic_general[collection_dir][item_dir][essence_dir] = {}
-                
-        print(dic_general)
-        
+
         strHTMLPath = os.path.join(path_html, "library.html")
         
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic_general=dic_general)
@@ -119,9 +117,6 @@ class ItemHandler(BaseHandler):
             label_user = getLabelUserFromCurrentCookie(self)
             
         idItem = idItem[:-4] # Supr ".ite"
-        print("item")
-        print(idCollection)
-        print(idItem)
 
         pathDirectoryCollection = getPathDirectory(path_library, idCollection, "collection")
         pathDirectoryItem = getPathDirectory(pathDirectoryCollection, idItem, "item")
@@ -146,10 +141,6 @@ class EssenceHandler(BaseHandler):
             label_user = getLabelUserFromCurrentCookie(self)
             
         idEssence = idEssence [:-4] # Supr ".ess"
-        print("essence")
-        #print(idCollection)
-        #print(idItem)
-        #print(idEssence)
 
         pathDirectoryCollection = getPathDirectory(path_library, idCollection, "collection")
         pathDirectoryItem = getPathDirectory(pathDirectoryCollection, idItem, "item")
@@ -171,8 +162,6 @@ class EssenceHandler(BaseHandler):
         else :
             essence = None
 
-        print(path_url)
-        
         strHTMLPath = os.path.join(path_html, "essence.html")
         
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic=dicEssence, idCollection=idCollection, idItem=idItem, 
@@ -223,10 +212,7 @@ class LoginHandler(BaseHandler):
         if dicGeneral["dicSession"] is not None :
             dicSession = dicGeneral["dicSession"]
         dicError = dicGeneral["dicError"]
-        
-        print("dicError")
-        print(dicError)
-        
+
         if booCheckPasswordCorrect == True :
             # The label of the user connected to display
             firstname = dicUser["firstname"]
