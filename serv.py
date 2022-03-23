@@ -11,6 +11,8 @@ import os
 import tempfile
 import requests
 import json
+import psycopg2.extras
+import uuid
 from datetime import datetime, date, timedelta
 from def_init import *
 from tornado.options import define, options
@@ -189,6 +191,7 @@ class LoginHandler(BaseHandler):
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=None, password=None, dicError=None)
 
     def post(self):
+    
         if not self.current_user :
             label_user = None
         else :
@@ -196,113 +199,48 @@ class LoginHandler(BaseHandler):
     
         username = self.get_argument("username")
         password = self.get_argument("password")
+        ip_user = self.request.remote_ip
+        
+        dicUser = {}
+        dicUser["username"] = username
+        dicUser["password"] = password
+        dicUser["ip_user"] = ip_user
 
-        print("username"+username)
-        print("password"+password)
 
         dicError = {"username-errors": None,
                     "password-errors": None}
         
-            
-        connection = psycopg2.connect(
-                database = "anavevodb",
-                user = "postgres",
-                password = "root",
-                host = "localhost",
-                port = "5432")
-            
-        connection.set_session(readonly=True)
-
-        try :
-            cursor = connection.cursor()
-
-            sql_query = "SELECT COUNT(*) FROM papareo.user WHERE username = %s"
-
-            # Encodage + hash username à faire ?
-            cursor.execute(sql_query, (username,))
-
-            int_count = cursor.fetchone()[0]
-
-            booCheckUsernameExist = False
-            booCheckPasswordCorrect = False
-
-            if int_count == 0 :
-                dicError["username-errors"] = "L'identifiant saisi n'existe pas."
-            elif int_count == 1 :
-                print("utilisateur trouve")
-                booCheckUsernameExist = True
-            else :
-                dicError["username-errors"] = "L'identifiant saisi existe en plusieurs fois, merci de contacter le support."
-
-            if booCheckUsernameExist == True :
-                sql_query = "SELECT id, username, firstname, lastname FROM papareo.user WHERE username = %s AND password = %s"
-
-                # Encodage ou hash password à faire
-                cursor.execute(sql_query, (username, password))
-                print("query:")
-                print(cursor.query)
-                #int_count = cursor.fetchone()[0]
-                int_count = cursor.rowcount
-                if int_count == 0 :
-                    print("password incorrect")
-                    dicError["password-errors"] = "Le mot de passe est incorrect."
-                elif int_count == 1 :
-                    print("password correct")
-                    booCheckPasswordCorrect = True
-                else :
-                    print("plusieurs utilisateurs trouves, erreur")
-                    dicError["password-errors"] = "Plusieurs utilisateurs trouvés, merci de contacter le support."
-
-                if booCheckPasswordCorrect == True :
-                    # Create a session
-
-                    #session = requests.Session()
-                    dicSession = {"username": username, "password": password}
-                    #url = "localhost:8888/login"
-                    #resp = session.post(url, data=dicSession)
-                    
-                    #self.session = session
-                    #self.session.headers.update({'user-agent' : "test"})
-                    #res = self.session.post("http://localhost:8888/logged", data = dicSession)
-                    #print("res")
-                    #print(res)
-  
-                    row = cursor.fetchone()
-                    print(row)
-                    userid = row[0]
-                    username = row[1]
-                    firstname = row[2]
-                    lastname = row[3]
-                    
-                    # Function to create a session
-                    
-                    
-                    
-        except psycopg2.Error as e:
-            print("Failed to get record from PostGre table: {}".format(e))
-
-        finally:
-            if connection:
-                cursor.close()
-                connection.close()
-                print("PostGre connection is closed")
-
+        dicGeneral = {}
+        dicGeneral["dicError"] = dicError
+        dicGeneral["dicUser"] = dicUser
+       
+        # Check user connection
+        dicGeneral = checkUserConnection(dicGeneral)
+        
+        booCheckPasswordCorrect = dicGeneral["booCheckPasswordCorrect"]
+        dicUser = dicGeneral["dicUser"]
+        dicSession = None
+        if dicGeneral["dicSession"] is not None :
+            dicSession = dicGeneral["dicSession"]
+        dicError = dicGeneral["dicError"]
+        
         print("dicError")
         print(dicError)
         
         if booCheckPasswordCorrect == True :
             # The label of the user connected to display
+            firstname = dicUser["firstname"]
+            lastname = dicUser["lastname"]
+            
             userlabel = str(firstname) + " " + str(lastname)
-
-            # Define the timestamp expiration of the cookie
-            datetime_jour = datetime.now() 
-            delta_expiration = timedelta(minutes=5)
-            date_expiration = datetime_jour + delta_expiration
-                        
-            timestamp_expiration = float(date_expiration.timestamp())
-                        
+            
+            cookie_session_id = dicSession["cookie_session_id"]
+            date_expiration_timestamp = dicSession["date_expiration_timestamp"]
+            
+            timestamp_expiration = float(date_expiration_timestamp.timestamp())
+            
             self.set_secure_cookie('userlabel', userlabel, expires=timestamp_expiration)
-            self.set_secure_cookie('sessionid', str(userid), expires=timestamp_expiration)
+            self.set_secure_cookie('sessionid', str(cookie_session_id), expires=timestamp_expiration)
                         
             self.redirect('/logged')
                     
@@ -416,8 +354,152 @@ class HomeHandler(BaseHandler):
         
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, search_results = html_row)
 
+def checkUserConnection(dicGeneral):
 
-def getLabelUserFromCurrentCookie(self) :
+    connection = psycopg2.connect(
+            database = "anavevodb",
+            user = "postgres",
+            password = "root",
+            host = "localhost",
+            port = "5432")
+        
+    connection.set_session(readonly=True)
+
+    dicSession = {}
+    
+    try :
+        cursor = connection.cursor()
+
+        sql_query = "SELECT COUNT(*) FROM papareo.user WHERE username = %s"
+
+        # Encodage + hash username à faire ?
+        dicUser = dicGeneral["dicUser"]
+        username = dicUser["username"]
+        
+        cursor.execute(sql_query, (username,))
+
+        int_count = cursor.fetchone()[0]
+
+        booCheckUsernameExist = False
+        booCheckPasswordCorrect = False
+
+        dicError = dicGeneral["dicError"]
+        
+        if int_count == 0 :
+            dicError["username-errors"] = "L'identifiant saisi n'existe pas."
+        elif int_count == 1 :
+            print("utilisateur trouve")
+            booCheckUsernameExist = True
+        else :
+            dicError["username-errors"] = "L'identifiant saisi existe en plusieurs fois, merci de contacter le support."
+
+        if booCheckUsernameExist == True :
+            sql_query = "SELECT id, username, firstname, lastname FROM papareo.user WHERE username = %s AND password = %s"
+
+            # Encodage ou hash password à faire
+            password = dicUser["password"]
+            
+            cursor.execute(sql_query, (username, password))
+
+            int_count = cursor.rowcount
+            
+            if int_count == 0 :
+                print("password incorrect")
+                dicError["password-errors"] = "Le mot de passe est incorrect."
+            elif int_count == 1 :
+                print("password correct")
+                booCheckPasswordCorrect = True
+            else :
+                print("plusieurs utilisateurs trouves, erreur")
+                dicError["password-errors"] = "Plusieurs utilisateurs trouvés, merci de contacter le support."
+
+            if booCheckPasswordCorrect == True :
+
+                row = cursor.fetchone()
+                userid = row[0]
+                username = row[1]
+                firstname = row[2]
+                lastname = row[3]
+                
+                # Add new values to dicUser                   
+                dicUser["userid"] = userid
+                dicUser["firstname"] = firstname
+                dicUser["lastname"] = lastname
+                
+                # Set session
+                dicSession = setSessionUserId(dicUser)
+            
+    except psycopg2.Error as e:
+        print("Failed to get record from PostGre table: {}".format(e))
+
+    finally:
+        if connection:
+            cursor.close()
+            connection.close()
+            print("PostGre connection is closed")
+
+    dicGeneral["dicUser"] = dicUser 
+    dicGeneral["dicSession"] = dicSession    
+    dicGeneral["dicError"] = dicError
+    dicGeneral["booCheckPasswordCorrect"] = booCheckPasswordCorrect
+     
+    return dicGeneral
+
+def setSessionUserId(dicUser):
+
+    # Function to create a session
+                    
+    # Define the timestamp expiration of the cookie
+    datetime_jour = datetime.now() 
+    delta_expiration = timedelta(minutes=5)
+    date_expiration = datetime_jour + delta_expiration
+
+    # Need to register uuid before using in insert query postgres
+    psycopg2.extras.register_uuid()
+
+    # Generation the random id for cookie session
+    random_cookie_session_id = uuid.uuid4()
+    
+    connection_usersession = psycopg2.connect(
+        database = "anavevodb",
+        user = "postgres",
+        password = "root",
+        host = "localhost",
+        port = "5432")
+        
+    try :
+        cursor_session = connection_usersession.cursor()
+        
+        sql_query = "INSERT INTO papareo.usersession (id_user, ip_user, date_creation, date_creation_timestamp, date_expiration, date_expiration_timestamp, cookie_session_id, active) "
+        sql_query += "VALUES (%s, %s, %s, %s, %s, %s, %s, 'True') RETURNING cookie_session_id, date_expiration_timestamp; "
+        
+        cursor_session.execute(sql_query, (dicUser["userid"], dicUser["ip_user"], datetime_jour, datetime_jour, date_expiration, date_expiration, random_cookie_session_id))
+    
+        row_usersession = cursor_session.fetchone()       
+        cookie_session_id = row_usersession[0]
+        date_expiration_timestamp = row_usersession[1]
+        
+        connection_usersession.commit()
+    
+        print("cookie_session_id"+cookie_session_id)
+        print("date_expiration_timestamp"+str(date_expiration_timestamp))
+        
+    except psycopg2.Error as e:
+        print("Failed to insert record into PostGre table usersession: {}".format(e))
+
+    finally:
+        if connection_usersession:
+            cursor_session.close()
+            connection_usersession.close()
+            print("PostGre connection_usersession is closed")
+            
+    dicSession = {}
+    dicSession["cookie_session_id"] = cookie_session_id
+    dicSession["date_expiration_timestamp"] = date_expiration_timestamp
+    
+    return dicSession
+
+def getLabelUserFromCurrentCookie(self):
 
     label_user = None
     if self.get_secure_cookie("userlabel") is not None :
@@ -425,7 +507,7 @@ def getLabelUserFromCurrentCookie(self) :
 
     return label_user
 
-def createJSONFile(arrJSONElement, arrJSONItem, arrJSONEssence, parentElementId, parentEltId, eltId, eltName, path_directory_parent_element, directory_element) :
+def createJSONFile(arrJSONElement, arrJSONItem, arrJSONEssence, parentElementId, parentEltId, eltId, eltName, path_directory_parent_element, directory_element):
     
     if arrJSONElement is not None and len(arrJSONElement) > 0 : 
         for jsonElement in arrJSONElement :
@@ -496,7 +578,6 @@ def createJSONFile(arrJSONElement, arrJSONItem, arrJSONEssence, parentElementId,
                 elif directory_element == "item" :
                     createJSONFile(arrJSONEssence, arrJSONEssence, arrJSONEssence, jsonElementId, "item_id", "id", "nom", path_directory_element, "essence") 
           
-
 def make_app():
     
     settings = {

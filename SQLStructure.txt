@@ -1,0 +1,14 @@
+
+-- Create UserSession Table
+create table papareo.usersession (
+	id SERIAL,
+	id_user INTEGER,
+	ip_user VARCHAR,
+	date_creation DATE,
+	date_creation_timestamp TIMESTAMP,
+	date_expiration DATE,
+	date_expiration_timestamp TIMESTAMP,
+	cookie_session_id VARCHAR,
+	active BOOLEAN,
+	PRIMARY KEY (id)
+)
