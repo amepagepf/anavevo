@@ -11,6 +11,7 @@ import os
 import tempfile
 import requests
 import json
+from datetime import datetime, timedelta
 from def_init import *
 from tornado.options import define, options
 
@@ -208,7 +209,7 @@ class LoginHandler(tornado.web.RequestHandler):
                 dicError["username-errors"] = "L'identifiant saisi existe en plusieurs fois, merci de contacter le support."
 
             if booCheckUsernameExist == True :
-                sql_query = "SELECT firstname, lastname FROM papareo.user WHERE username = %s AND password = %s"
+                sql_query = "SELECT id, username, firstname, lastname FROM papareo.user WHERE username = %s AND password = %s"
 
                 # Encodage + hash password à faire
                 cursor.execute(sql_query, (username, password))
@@ -242,15 +243,29 @@ class LoginHandler(tornado.web.RequestHandler):
   
                     row = cursor.fetchone()
                     print(row)
-                    firstname = row[0]
-                    lastname = row[1]
+                    userid = row[0]
+                    username = row[1]
+                    firstname = row[2]
+                    lastname = row[3]
+                    
 
                     userlabel = str(firstname) + " " + str(lastname)
-                    self.set_secure_cookie('userlabel', userlabel)
+
+                    date = datetime.now() + timedelta(minutes=1)
+                    
+                    print(date)
+                    
+                    timestamp = datetime.timestamp(date.now())
+                    print(timestamp)
+                    self.set_secure_cookie('userlabel', userlabel, expires_days=timestamp)
+                    self.set_secure_cookie('sessionid', str(userid), expires_days=timestamp)
+                    
                     self.redirect('/logged')
                     
-
+                else :
                     
+                    strHTMLPath = os.path.join(path_html, "login.html")       
+                    self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=username, password=password, dicError=dicError)
                     
                     
         except psycopg2.Error as e:
@@ -264,9 +279,7 @@ class LoginHandler(tornado.web.RequestHandler):
 
         print("dicError")
         print(dicError)
-        strHTMLPath = os.path.join(path_html, "login.html")
         
-        self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=username, password=password, dicError=dicError)
 
 class LoggedHandler(tornado.web.RequestHandler):
     def get(self):
@@ -442,7 +455,7 @@ def make_app():
     
     settings = {
         "static_path": path_static,
-        "cookie_secret": "MadmaxBouleDeGommeRadioStar$&%9744",
+        "cookie_secret": "MySuperCookie06",
         "login_url": "/login",
         "xsrf_cookies": True,
     }
