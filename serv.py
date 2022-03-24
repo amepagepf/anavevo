@@ -235,6 +235,62 @@ class LoginHandler(BaseHandler):
             strHTMLPath = os.path.join(path_html, "login.html")       
             self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=username, password=password, dicError=dicError)
         
+class LoginRegisterHandler(BaseHandler):
+    def get(self):
+        if not self.current_user :
+            label_user = None
+        else :
+            label_user = getLabelUserFromCurrentCookie(self)
+        
+        strHTMLPath = os.path.join(path_html, "register.html")
+        
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=None, password=None, confirmpassword=None, lastname=None, firstname=None, dicError=None)
+        
+    def post(self):
+        print("test")
+        
+        if not self.current_user :
+            label_user = None
+        else :
+            label_user = getLabelUserFromCurrentCookie(self)
+            
+        lastname = self.get_argument("lastname")
+        firstname = self.get_argument("firstname")        
+        username = self.get_argument("username")
+        password = self.get_argument("password")
+        confirmpassword = self.get_argument("confirmpassword")
+        
+        dicError = {}
+        dicError["lastname-errors"] = None
+        dicError["firstname-errors"] = None
+        dicError["username-errors"] = None
+        dicError["password-errors"] = None
+        dicError["confirmpassword-errors"] = None
+        
+        regex_name = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
+        if re.fullmatch(regex_name, lastname) : 
+            print("non valid name")
+            dicError["lastname-errors"] = "Caractères spéciaux non autorisés."
+        
+        regex_email = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
+        if re.fullmatch(regex_email, username):
+            print("Valid email")
+        else:
+            print("Invalid email")
+            dicError["username-errors"] = "L'email saisie est invalide."
+            
+        if password != confirmpassword :
+            print("password not identical")
+            dicError["confirmpassword-errors"] = "Le mot de passe n'est pas identique."
+        print(lastname)
+        print(firstname)
+        print(username)
+        print(password)
+        print(confirmpassword)
+        
+        strHTMLPath = os.path.join(path_html, "register.html")
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=username, password=password, confirmpassword=confirmpassword, lastname=lastname, firstname=firstname, dicError=dicError)
+        
 
 class LoggedHandler(BaseHandler):
     def get(self):
@@ -577,6 +633,7 @@ def make_app():
         # Les parenthèses dans les regex permettent de délimiter les id qui vont transiter à traver les url
         (r"/home", HomeHandler),
         (r"/login", LoginHandler),
+        (r"/register", LoginRegisterHandler),
         (r"/logged", LoggedHandler),
         (r"/logout", LogoutHandler),
         (r"/library", LibraryHandler),

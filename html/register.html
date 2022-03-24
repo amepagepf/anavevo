@@ -44,14 +44,42 @@
 		<div class="my-4 p-2 text-center bg-light shadow"> <img class="my-3" src="{{ static_url('img/icon.png') }}" width="100" height="70" alt="Site logo">
 			<p class="fw-bold display-3">Anavevo</p>
 			<div class="col-md-6 mx-auto">
-				<p class="lead">Connexion</p>
+				<p class="lead">S'enregistrer</p>
 			</div>
 			<div class="d-flex flex-column align-items-center login-container">
 				<form class="form-login-container" method="POST"> 
 					{% module xsrf_form_html() %}
 					<div class="d-flex flex-column mt-3 element-container">
 						<div class="d-flex flex-column align-items-start input-container">
-							<label for="username-input">Identifiant : </label>
+							<label for="lastname-input">Nom : </label>
+							<input id="lastname-input" class="{% if dicError is not None and dicError['lastname-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="text" placeholder="Nom" name="lastname" value="{% if lastname is not None %}{{ lastname }}{% end %}" required>
+						</div>								
+						<div class="error-list"> 
+							{% if dicError is not None and dicError["lastname-errors"] is not None %}
+							<div class="message-errors">
+								<i class="fa-solid fa-circle-exclamation error-icon"></i> 
+								<span class="mb-1">{{ dicError["lastname-errors"] }}</span> 
+							</div>
+							{% end %}
+						</div>
+					</div>
+					<div class="d-flex flex-column mt-3 element-container">
+						<div class="d-flex flex-column align-items-start input-container">
+							<label for="firstname-input">Prénom : </label>
+							<input id="firstname-input" class="{% if dicError is not None and dicError['firstname-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="text" placeholder="Prénom" name="firstname" value="{% if firstname is not None %}{{ firstname }}{% end %}" required>
+						</div>								
+						<div class="error-list"> 
+							{% if dicError is not None and dicError["firstname-errors"] is not None %}
+							<div class="message-errors">
+								<i class="fa-solid fa-circle-exclamation error-icon"></i> 
+								<span class="mb-1">{{ dicError["firstname-errors"] }}</span> 
+							</div>
+							{% end %}
+						</div>
+					</div>
+					<div class="d-flex flex-column mt-3 element-container">
+						<div class="d-flex flex-column align-items-start input-container">
+							<label for="username-input">Adresse email : </label>
 							<input id="username-input" class="{% if dicError is not None and dicError['username-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="text" placeholder="Email" name="username" value="{% if username is not None %}{{ username }}{% end %}" required>
 						</div>								
 						<div class="error-list"> 
@@ -80,17 +108,34 @@
 							{% end %}
 						</div>
 					</div>
+					<div class="d-flex flex-column mt-3 element-container">
+						<div class="d-flex flex-column align-items-start input-container">
+							<label for="confirmpassword-input">Confirmer le mot de passe : </label>
+							<div class="password-input">
+								<input id="confirmpassword-input" class="{% if dicError is not None and dicError['confirmpassword-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="password" placeholder="Confirmer le mot de passe" name="confirmpassword" value="{% if confirmpassword is not None %}{{ confirmpassword }}{% end %}" required>
+								<i class="fa-solid fa-eye-slash toggle-eye" onclick="toggleEye(this)" id="togglePassword"></i>
+							</div>
+						</div>
+						<div class="error-list"> 
+							{% if dicError is not None and dicError["confirmpassword-errors"] is not None %}
+							<div class="message-errors">
+								<i class="fa-solid fa-circle-exclamation error-icon"></i> 
+								<span class="mb-1">{{ dicError["confirmpassword-errors"] }}</span>
+							</div>
+							{% end %}
+						</div>
+					</div>
 					<div class="login-button">
-						<button type="submit" value="send" class="btn btn-outline-primary btn-lg mb-3" role="button">Se connecter</button>
+						<button type="submit" value="send" class="btn btn-outline-primary btn-lg mb-3" role="button">S'enregistrer</button>
 					</div>
 				</form>
 			</div>
-			<div class="register-container">
+			<div class="login-container">
 				<div class="connexion-separator">
 					<span class="text-connexion-separator">Ou</span>
-					<span class="text-container">Vous ne possédez pas de compte? Créez en un.</span>
+					<span class="text-container">Vous possédez déjà un compte? Connectez-vous.</span>
 				</div>
-				<a href={{ str(path_url) + "/register" }} class="btn btn-outline-primary btn-lg mb-3" role="button">S'enregistrer</a>
+				<a href={{ str(path_url) + "/login" }} class="btn btn-outline-primary btn-lg mb-3" role="button">Se connecter</a>
 			</div>
 		</div>
 	</div>

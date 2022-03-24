@@ -2,111 +2,77 @@
 <html lang="en">
 
 <head>
-  <!-- Required meta tags -->
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <link rel="stylesheet" href="{{ static_url('css/style.css') }}" />
-  <link rel="stylesheet" href="{{ static_url('css/customstyle.css') }}" />
-  <link rel="icon" type="image/png" href="{{ static_url('img/icon.png') }}" />
-  <title>Anavevo</title>
+	<!-- Required meta tags -->
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+	<link rel="stylesheet" href="{{ static_url('css/style.css') }}" />
+	<link rel="stylesheet" href="{{ static_url('css/customstyle.css') }}" />
+	<link rel="icon" type="image/png" href="{{ static_url('img/icon.png') }}" />
+	<title>Anavevo</title>
 </head>
 
 <body>
-
-  <!-- Navbar -->
-  <div class="bg-dark fixed-top shadow">
-    <div class="container">
-      <div class="row">
-        <nav class="col navbar navbar-expand-lg navbar-dark">
-
-          <a class="navbar-brand" href={{ str(path_url) + "/home" }}>
-            <img src="{{ static_url('img/icon.png') }}" width="40" height="30" alt="Site logo">
-            Anavevo
-          </a>
-
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-
-          <div id="navbarContent" class="collapse navbar-collapse">
-            <ul class="navbar-nav navbar-custom">
-              <li class="nav-item active">
-                <a class="nav-link" href={{ str(path_url) + "/home" }}>Accueil</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href={{ str(path_url) + "/library" }}>Bibliothèque</a>
-              </li>
-			  {% if label_user is None %}
-              <li class="nav-item">
-                <a class="nav-link" href={{ str(path_url) + "/login" }}>Se connecter</a>
-              </li>
-			  {% else %}
-			  <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" 
-                role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  {{ label_user }}
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-					<li><a class="dropdown-item" href={{ str(path_url) + "/logout" }}>Déconnexion</a></li>
-                </ul>
-              </li>
-			  {% end %}
-            </ul>
-          </div>
-
-        </nav>
-      </div>
-    </div>
-  </div>
-
-  <!-- Contenu de la page -->
-  <div class="container">
-
-    <div class="my-4">marge</div>
-
-    <div class="my-4 p-2 text-center bg-light shadow">
-      <img class="my-3" src="{{ static_url('img/icon.png') }}" width="100" height="70" alt="Site logo">
-      <p class="fw-bold display-3">Anavevo</p>
-      <div class="col-md-6 mx-auto">
-        <p class="lead">Ce site a pour but d'archiver des projets linguistiques, cela va permettre d'accéder facilement à ses projets mais également de les rendre visibles. L'objectif est non seulement de faciliter le travail des chercheurs mais également d'apporter de la visibilité à leurs travaux. </p>
-      </div>
-      <a href={{ str(path_url) + "/library" }} class="btn btn-outline-primary btn-lg mb-3" role="button">Consulter la bibliothèque</a>
-	  <div class="d-flex flex-column align-items-center search-container">
-		<div class="search-form">
-			<form method="POST">
-				{% module xsrf_form_html() %}
-				<div class="d-flex flex-row align-items-center search-input-container">
-					<input type="text" class="style-input" placeholder="Rechercher..." name="search-input-text">
-					<button type="submit" value="send" class="btn btn-outline-primary btn-lg ms-2" role="button">Recherche</button>
-				</div>
-			</form>
+	<!-- Navbar -->
+	<div class="bg-dark fixed-top shadow">
+		<div class="container">
+			<div class="row">
+				<nav class="col navbar navbar-expand-lg navbar-dark">
+					<a class="navbar-brand" href={{ str(path_url) + "/home" }}> <img src="{{ static_url('img/icon.png') }}" width="40" height="30" alt="Site logo"> Anavevo </a>
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button>
+					<div id="navbarContent" class="collapse navbar-collapse">
+						<ul class="navbar-nav navbar-custom">
+							<li class="nav-item active"> <a class="nav-link" href={{ str(path_url) + "/home" }}>Accueil</a> </li>
+							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/library" }}>Bibliothèque</a> </li> {% if label_user is None %}
+							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/login" }}>Se connecter</a> </li> {% else %}
+							<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                           {{ label_user }}
+                           </a>
+								<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+									<li><a class="dropdown-item" href={{ str(path_url) + "/logout" }}>Déconnexion</a></li>
+								</ul>
+							</li> {% end %} </ul>
+					</div>
+				</nav>
+			</div>
 		</div>
-		{% if search_results is not None %}
-			{% raw search_results %}
-		{% end %}
-	  </div>
-    </div>
-  </div>
-
-  <!-- Pied de page -->
-  <div class="bg-light">
-    <div class="container">
-      <div class="row">
-        <div class="col my-2">
-          <ul class="list-inline text-center">
-            <li class="list-inline-item"><a href="#">À propos</a></li>
-            <li class="list-inline-item">&middot;</li>
-            <li class="list-inline-item"><a href="#">Vie privée</a></li>
-            <li class="list-inline-item">&middot;</li>
-            <li class="list-inline-item"><a href="#">Conditions d'utilisations</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Option 1: Bootstrap Bundle with Popper -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-
+	</div>
+	<!-- Contenu de la page -->
+	<div class="container">
+		<div class="my-4">marge</div>
+		<div class="my-4 p-2 text-center bg-light shadow"> <img class="my-3" src="{{ static_url('img/icon.png') }}" width="100" height="70" alt="Site logo">
+			<p class="fw-bold display-3">Anavevo</p>
+			<div class="col-md-6 mx-auto">
+				<p class="lead">Ce site a pour but d'archiver des projets linguistiques, cela va permettre d'accéder facilement à ses projets mais également de les rendre visibles. L'objectif est non seulement de faciliter le travail des chercheurs mais également d'apporter de la visibilité à leurs travaux. </p>
+			</div> <a href={{ str(path_url) + "/library" }} class="btn btn-outline-primary btn-lg mb-3" role="button">Consulter la bibliothèque</a>
+			<div class="d-flex flex-column align-items-center search-container">
+				<div class="search-form">
+					<form method="POST"> {% module xsrf_form_html() %}
+						<div class="d-flex flex-row align-items-center search-input-container">
+							<input type="text" class="style-input" placeholder="Rechercher..." name="search-input-text">
+							<button type="submit" value="send" class="btn btn-outline-primary btn-lg ms-2" role="button">Recherche</button>
+						</div>
+					</form>
+				</div> {% if search_results is not None %} {% raw search_results %} {% end %} </div>
+		</div>
+	</div>
+	<!-- Pied de page -->
+	<div class="bg-light">
+		<div class="container">
+			<div class="row">
+				<div class="col my-2">
+					<ul class="list-inline text-center">
+						<li class="list-inline-item"><a href="#">À propos</a></li>
+						<li class="list-inline-item">&middot;</li>
+						<li class="list-inline-item"><a href="#">Vie privée</a></li>
+						<li class="list-inline-item">&middot;</li>
+						<li class="list-inline-item"><a href="#">Conditions d'utilisations</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- Option 1: Bootstrap Bundle with Popper -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </body>
+
 </html>
