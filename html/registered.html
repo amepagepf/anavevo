@@ -5,11 +5,9 @@
 	<!-- Required meta tags -->
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-	<script type="text/javascript" src="{{ static_url('js/anavevo.js') }}"></script>
 	<link rel="stylesheet" href="{{ static_url('css/style.css') }}" />
 	<link rel="stylesheet" href="{{ static_url('css/customstyle.css') }}" />
 	<link rel="icon" type="image/png" href="{{ static_url('img/icon.png') }}" />
-	<link rel="stylesheet" href="{{ static_url('css/fontawesome/css/all.css') }}" />
 	<title>Anavevo</title>
 </head>
 
@@ -44,53 +42,8 @@
 		<div class="my-4 p-2 text-center bg-light shadow"> <img class="my-3" src="{{ static_url('img/icon.png') }}" width="100" height="70" alt="Site logo">
 			<p class="fw-bold display-3">Anavevo</p>
 			<div class="col-md-6 mx-auto">
-				<p class="lead">Connexion</p>
-			</div>
-			<div class="d-flex flex-column align-items-center login-container">
-				<form class="form-login-container" method="POST"> 
-					{% module xsrf_form_html() %}
-					<div class="d-flex flex-column mt-3 element-container">
-						<div class="d-flex flex-column align-items-start input-container">
-							<label for="username-input">Identifiant : </label>
-							<input id="username-input" class="{% if dicError is not None and dicError['username-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="text" placeholder="Email" name="username" value="{% if username is not None %}{{ username }}{% end %}" required>
-						</div>								
-						<div class="error-list"> 
-							{% if dicError is not None and dicError["username-errors"] is not None %}
-							<div class="message-errors">
-								<i class="fa-solid fa-circle-exclamation error-icon"></i> 
-								<span class="mb-1">{{ dicError["username-errors"] }}</span> 
-							</div>
-							{% end %}
-						</div>
-					</div>
-					<div class="d-flex flex-column mt-3 element-container">
-						<div class="d-flex flex-column align-items-start input-container">
-							<label for="password-input">Mot de passe : </label>
-							<div class="password-input">
-								<input id="password-input" class="{% if dicError is not None and dicError['password-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="password" placeholder="Mot de passe" name="password" value="{% if password is not None %}{{ password }}{% end %}" required>
-								<i class="fa-solid fa-eye-slash toggle-eye" onclick="toggleEye(this)" id="togglePassword"></i>
-							</div>
-						</div>
-						<div class="error-list"> 
-							{% if dicError is not None and dicError["password-errors"] is not None %}
-							<div class="message-errors">
-								<i class="fa-solid fa-circle-exclamation error-icon"></i> 
-								<span class="mb-1">{{ dicError["password-errors"] }}</span>
-							</div>
-							{% end %}
-						</div>
-					</div>
-					<div class="login-button">
-						<button type="submit" value="send" class="btn btn-outline-primary btn-lg mb-3 button-width" role="button">Se connecter</button>
-					</div>
-				</form>
-			</div>
-			<div class="register-container">
-				<div class="connexion-separator">
-					<span class="text-connexion-separator">Ou</span>
-					<span class="text-container">Vous ne possédez pas de compte? Créez-en un.</span>
-				</div>
-				<a href={{ str(path_url) + "/register" }} class="btn btn-outline-primary btn-lg mb-3 button-width" role="button">S'inscrire</a>
+				<p class="lead">Inscription terminée</p> 
+				<a href={{ str(path_url) + "/home" }} class="btn btn-outline-primary btn-lg mb-3" role="button">Accueil</a> 
 			</div>
 		</div>
 	</div>

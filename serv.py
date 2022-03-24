@@ -8,6 +8,8 @@ import tornado.options
 import psycopg2
 import re
 import os
+import hashlib
+import base64
 import tempfile
 import requests
 import json
@@ -204,7 +206,7 @@ class LoginHandler(BaseHandler):
         dicGeneral["dicUser"] = dicUser
        
         # Check user connection
-        dicGeneral = checkUserConnection(dicGeneral)
+        dicGeneral = checkUserLoginConnexion(dicGeneral)
         
         booCheckPasswordCorrect = dicGeneral["booCheckPasswordCorrect"]
         dicUser = dicGeneral["dicUser"]
@@ -235,7 +237,7 @@ class LoginHandler(BaseHandler):
             strHTMLPath = os.path.join(path_html, "login.html")       
             self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=username, password=password, dicError=dicError)
         
-class LoginRegisterHandler(BaseHandler):
+class RegisterHandler(BaseHandler):
     def get(self):
         if not self.current_user :
             label_user = None
@@ -247,8 +249,7 @@ class LoginRegisterHandler(BaseHandler):
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=None, password=None, confirmpassword=None, lastname=None, firstname=None, dicError=None)
         
     def post(self):
-        print("test")
-        
+
         if not self.current_user :
             label_user = None
         else :
@@ -260,6 +261,13 @@ class LoginRegisterHandler(BaseHandler):
         password = self.get_argument("password")
         confirmpassword = self.get_argument("confirmpassword")
         
+        dicUser = {}
+        dicUser["lastname"] = lastname
+        dicUser["firstname"] = firstname
+        dicUser["username"] = username
+        dicUser["password"] = password
+        dicUser["confirmpassword"] = confirmpassword
+               
         dicError = {}
         dicError["lastname-errors"] = None
         dicError["firstname-errors"] = None
@@ -267,31 +275,35 @@ class LoginRegisterHandler(BaseHandler):
         dicError["password-errors"] = None
         dicError["confirmpassword-errors"] = None
         
-        regex_name = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
-        if re.fullmatch(regex_name, lastname) : 
-            print("non valid name")
-            dicError["lastname-errors"] = "Caractères spéciaux non autorisés."
-        
-        regex_email = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
-        if re.fullmatch(regex_email, username):
-            print("Valid email")
-        else:
-            print("Invalid email")
-            dicError["username-errors"] = "L'email saisie est invalide."
-            
-        if password != confirmpassword :
-            print("password not identical")
-            dicError["confirmpassword-errors"] = "Le mot de passe n'est pas identique."
-        print(lastname)
-        print(firstname)
-        print(username)
-        print(password)
-        print(confirmpassword)
-        
-        strHTMLPath = os.path.join(path_html, "register.html")
-        self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=username, password=password, confirmpassword=confirmpassword, lastname=lastname, firstname=firstname, dicError=dicError)
-        
+        dicGeneral = {}
+        dicGeneral["dicError"] = dicError
+        dicGeneral["dicUser"] = dicUser
+       
+        # Check user connection
+        dicGeneral = checkUserRegisterInformation(dicGeneral)
 
+        booUserInformationHasError = dicGeneral["booUserInformationHasError"]
+                           
+        if booUserInformationHasError == False :
+            
+            setHashedPassword(dicGeneral)
+
+            self.redirect('/registered')        
+        else :
+            strHTMLPath = os.path.join(path_html, "register.html")
+            self.render(strHTMLPath, path_url=path_url, label_user=label_user, username=username, password=password, confirmpassword=confirmpassword, lastname=lastname, firstname=firstname, dicError=dicError)
+        
+class RegisteredHandler(BaseHandler):
+    def get(self):
+        if not self.current_user :
+            label_user = None
+        else :
+            label_user = getLabelUserFromCurrentCookie(self)
+        
+        strHTMLPath = os.path.join(path_html, "registered.html")
+        
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user)
+        
 class LoggedHandler(BaseHandler):
     def get(self):
         if not self.current_user :
@@ -396,7 +408,146 @@ class HomeHandler(BaseHandler):
         
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, search_results = html_row)
 
-def checkUserConnection(dicGeneral):
+def checkUserRegisterInformation(dicGeneral):
+
+    dicUser = dicGeneral["dicUser"]
+    dicError = dicGeneral["dicError"]
+    
+    lastname = dicUser["lastname"]
+    firstname = dicUser["firstname"]
+    username = dicUser["username"]
+    password = dicUser["password"]
+    confirmpassword = dicUser["confirmpassword"]
+    
+    booUserInformationHasError = False
+    
+    # Regex for the name, must be between 3 and 30, and have only characters, authorize , . ' -
+    regex_name = re.compile("^(?=.{3,29}$)[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$")
+    
+    # Verify lastname validity
+    if re.fullmatch(regex_name, lastname): 
+        print("valid lastname")
+    else :
+        print("non valid lastname")
+        dicError["lastname-errors"] = "Le nom est invalide."
+        booUserInformationHasError = True
+    
+    # Verify firstname validity        
+    if re.fullmatch(regex_name, firstname): 
+        print("valid firstname")
+    else :
+        print("non valid firstname")
+        dicError["firstname-errors"] = "Le prénom est invalide."
+        booUserInformationHasError = True
+        
+    # Verify email validity
+    regex_email = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
+    if re.fullmatch(regex_email, username):
+        print("Valid email")
+    else:
+        print("Invalid email")
+        dicError["username-errors"] = "L'email saisie est invalide."
+        booUserInformationHasError = True
+    
+    # Verify strength password
+    # TODO
+    
+    # Verify confirm password equal to password  
+    if password != confirmpassword :
+        print("password not identical")
+        dicError["confirmpassword-errors"] = "Le mot de passe n'est pas identique."
+        booUserInformationHasError = True
+    
+    connection = psycopg2.connect(
+        database = "anavevodb",
+        user = "postgres",
+        password = "root",
+        host = "localhost",
+        port = "5432")
+    
+    connection.set_session(readonly=True)
+    
+    try :
+        cursor = connection.cursor()
+    
+        sql_query = "SELECT COUNT(*) FROM papareo.user WHERE username = %s"
+        
+        cursor.execute(sql_query, (username,))
+
+        int_count = cursor.fetchone()[0]
+                
+        if int_count > 0 :
+            print("username non disponible")
+            dicError["username-errors"] = "L'identifiant saisi est déjà pris."
+            booUserInformationHasError = True
+        else :
+            print("username disponible")
+            
+    except psycopg2.Error as e:
+        print("Failed to get record from PostGre table: {}".format(e))
+
+    finally:
+        if connection:
+            cursor.close()
+            connection.close()
+            print("PostGre connection is closed")  
+
+    dicGeneral["dicUser"] = dicUser   
+    dicGeneral["dicError"] = dicError
+    dicGeneral["booUserInformationHasError"] = booUserInformationHasError
+    
+    return dicGeneral
+
+def setHashedPassword(dicGeneral):
+
+    dicUser = dicGeneral["dicUser"]
+    
+    username = dicUser["username"]
+    password = dicUser["password"]
+    firstname = dicUser["firstname"]
+    lastname = dicUser["lastname"]
+    
+    # Define the salt for the user password
+    salt_password = os.urandom(32)
+
+    # Define the hash key for the user password
+    key_password = hashlib.pbkdf2_hmac('sha256', password.encode('UTF-8'), salt_password, 100000)                
+    
+    # Define the byte password to store
+    storage_password = salt_password + key_password
+
+    # Encode in base64 the hash password and convert it to a string               
+    encode_password_64 = base64.b64encode(storage_password).decode('ascii')
+
+    connection_user = psycopg2.connect(
+        database = "anavevodb",
+        user = "postgres",
+        password = "root",
+        host = "localhost",
+        port = "5432")
+
+    try:
+        cursor_user = connection_user.cursor()
+    
+        sql_query = "INSERT INTO papareo.user(username, password, firstname, lastname, date_creation, date_creation_timestamp, private_access) "
+        sql_query += "VALUES (%s, %s, %s, %s, %s, %s, %s) "
+
+        datetime_jour = datetime.now()
+        
+        cursor_user.execute(sql_query, (username, encode_password_64, firstname, lastname, datetime_jour, datetime_jour, 'True'))
+
+        connection_user.commit()
+    
+    except psycopg2.Error as e:
+        print("Failed to insert record from PostGre table: {}".format(e))
+
+    finally:
+        if connection_user:
+            cursor_user.close()
+            connection_user.close()
+            print("PostGre connection_user is closed")
+    
+def checkUserLoginConnexion(dicGeneral):
 
     connection = psycopg2.connect(
             database = "anavevodb",
@@ -424,7 +575,8 @@ def checkUserConnection(dicGeneral):
 
         booCheckUsernameExist = False
         booCheckPasswordCorrect = False
-
+        booCheckMoreUsers = False
+        
         dicError = dicGeneral["dicError"]
         
         if int_count == 0 :
@@ -436,40 +588,57 @@ def checkUserConnection(dicGeneral):
             dicError["username-errors"] = "L'identifiant saisi existe en plusieurs fois, merci de contacter le support."
 
         if booCheckUsernameExist == True :
-            sql_query = "SELECT id, username, firstname, lastname FROM papareo.user WHERE username = %s AND password = %s"
+            sql_query = "SELECT id, password, firstname, lastname FROM papareo.user WHERE username = %s "
 
             # Encodage ou hash password à faire
             password = dicUser["password"]
             
-            cursor.execute(sql_query, (username, password))
+            cursor.execute(sql_query, (username,))
 
             int_count = cursor.rowcount
             
-            if int_count == 0 :
-                print("password incorrect")
-                dicError["password-errors"] = "Le mot de passe est incorrect."
-            elif int_count == 1 :
-                print("password correct")
-                booCheckPasswordCorrect = True
-            else :
+            if int_count > 1 :
+                booCheckMoreUsers = True
                 print("plusieurs utilisateurs trouves, erreur")
                 dicError["password-errors"] = "Plusieurs utilisateurs trouvés, merci de contacter le support."
-
-            if booCheckPasswordCorrect == True :
-
+            
+            if booCheckMoreUsers == False :
+            
                 row = cursor.fetchone()
-                userid = row[0]
-                username = row[1]
-                firstname = row[2]
-                lastname = row[3]
+                userid_bdd = row[0]
+                encode_password_64 = row[1]
+                firstname_bdd = row[2]
+                lastname_bdd = row[3]
                 
-                # Add new values to dicUser                   
-                dicUser["userid"] = userid
-                dicUser["firstname"] = firstname
-                dicUser["lastname"] = lastname
+                # Retrieve password
+                # Decode the BDD password in bytes
+                decode_password_64 = base64.b64decode(encode_password_64.encode('ascii'))
                 
-                # Set session
-                dicSession = setSessionUserId(dicUser)
+                # Get the salt from BDD password, 32 is the length of the salt
+                salt_from_storage = decode_password_64[:32] 
+                
+                # Get the key from BDD password
+                key_from_storage = decode_password_64[32:]
+
+                # Generate hash from password user gives in login, with the salt value from BDD password
+                key_password_tocheck = hashlib.pbkdf2_hmac('sha256', password.encode('UTF-8'), salt_from_storage, 100000)                
+
+                # Compare the two keys, if identical, password is correct
+                if key_from_storage == key_password_tocheck :
+                    print("password correct")
+                    booCheckPasswordCorrect = True
+                else :
+                    print("password incorrect")
+                    dicError["password-errors"] = "Le mot de passe est incorrect."
+                
+                if booCheckPasswordCorrect == True :
+                    # Add new values to dicUser                   
+                    dicUser["userid"] = userid_bdd
+                    dicUser["firstname"] = firstname_bdd
+                    dicUser["lastname"] = lastname_bdd
+                    
+                    # Set session
+                    dicSession = setSessionUserId(dicUser)
             
     except psycopg2.Error as e:
         print("Failed to get record from PostGre table: {}".format(e))
@@ -633,7 +802,8 @@ def make_app():
         # Les parenthèses dans les regex permettent de délimiter les id qui vont transiter à traver les url
         (r"/home", HomeHandler),
         (r"/login", LoginHandler),
-        (r"/register", LoginRegisterHandler),
+        (r"/register", RegisterHandler),
+        (r"/registered", RegisteredHandler),
         (r"/logged", LoggedHandler),
         (r"/logout", LogoutHandler),
         (r"/library", LibraryHandler),

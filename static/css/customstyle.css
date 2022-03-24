@@ -222,3 +222,7 @@
 	align-items: center;
 	font-size: 20px;
 }
+
+.button-width {
+	width: 150px;
+}
