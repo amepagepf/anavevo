@@ -223,6 +223,18 @@
 	font-size: 20px;
 }
 
-.button-width {
+.button-width-150 {
 	width: 150px;
+}
+
+.button-width-180 {
+	width: 180px;
+}
+
+.button-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 30px;
+	justify-content: center;
 }

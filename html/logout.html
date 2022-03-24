@@ -41,8 +41,13 @@
 		<div class="my-4">marge</div>
 		<div class="my-4 p-2 text-center bg-light shadow"> <img class="my-3" src="{{ static_url('img/icon.png') }}" width="100" height="70" alt="Site logo">
 			<p class="fw-bold display-3">Anavevo</p>
-			<div class="col-md-6 mx-auto">
-				<p class="lead">Déconnecté</p> <a href={{ str(path_url) + "/home" }} class="btn btn-outline-primary btn-lg mb-3" role="button">Accueil</a> </div>
+			<div class="col-md-6 mx-auto d-flex flex-column">
+				<p class="lead">Déconnecté</p>
+				<div class="button-row">
+					<a href={{ str(path_url) + "/home" }} class="btn btn-outline-primary btn-lg mb-3 button-width-180" role="button">Accueil</a>
+					<a href={{ str(path_url) + "/login" }} class="btn btn-outline-primary btn-lg mb-3 button-width-180" role="button">Se reconnecter</a>
+				</div>
+			</div>
 		</div>
 	</div>
 	<!-- Pied de page -->
