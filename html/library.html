@@ -23,15 +23,20 @@
 					<div id="navbarContent" class="collapse navbar-collapse">
 						<ul class="navbar-nav navbar-custom">
 							<li class="nav-item active"> <a class="nav-link" href={{ str(path_url) + "/home" }}>Accueil</a> </li>
-							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/library" }}>Bibliothèque</a> </li> {% if label_user is None %}
-							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/login" }}>Se connecter</a> </li> {% else %}
-							<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                           {{ label_user }}
-                           </a>
+							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/library" }}>Bibliothèque</a> </li> 
+							{% if label_user is None %}
+							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/login" }}>Se connecter</a> </li> 
+							{% else %}
+							<li class="nav-item dropdown"> 
+								<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+							   {{ label_user }}
+							   </a>
 								<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
 									<li><a class="dropdown-item" href={{ str(path_url) + "/logout" }}>Déconnexion</a></li>
 								</ul>
-							</li> {% end %} </ul>
+							</li> 
+							{% end %} 
+						</ul>
 					</div>
 				</nav>
 			</div>
@@ -53,32 +58,53 @@
 			</div>
 			<div id="library-table">
 				<table>
-					<tbody> {% for collectionkey, dic_item in dic_general.items() %}
+					<tbody> 
+						{% for collectionkey, dic_item in dic_general.items() %}
 						<tr>
 							<td>
 								<ul class="arbo-direction-column">
 									<div class="collection-container">
-										<div class="collection-navigation"> {% if len(dic_item) > 0 %}
-											<div class="arrow-right" onclick="showArborescence(this)"></div> {% else %}
-											<div class="no-arrow"></div> {% end %} <a href={{ str(path_url) + "/library/" + collectionkey + ".col" }} class="btn btn-outline-primary btn-lg m-3" role="button">
-                                    {{ collectionkey }}
-                                    </a> </div> {% for itemkey, dic_essence in dic_item.items() %}
+										<div class="collection-navigation"> 
+											{% if len(dic_item) > 0 %}
+											<div class="arrow-right" onclick="showArborescence(this)"></div> 
+											{% else %}
+											<div class="no-arrow"></div> 
+											{% end %} 
+											<a href={{ str(path_url) + "/library/" + collectionkey + ".col" }} class="btn btn-outline-primary btn-lg m-3" role="button">
+											{{ collectionkey }}
+											</a> 
+										</div> 
+										{% for itemkey, dic_essence in dic_item.items() %}
 										<ul>
 											<div class="item-container-hide">
-												<div class="item-navigation"> {% if len(dic_essence) > 0 %}
-													<div class="arrow-right" onclick="showArborescence(this)"></div> {% else %}
-													<div class="no-arrow"></div> {% end %} <a href={{ str(path_url) + "/library/" + str(collectionkey) + "/" + str(itemkey) + ".ite" }} class="btn btn-outline-primary btn-lg m-3" role="button">
-                                          {{ itemkey }}
-                                          </a> </div> {% for essencekey, essencevalue in dic_essence.items() %}
+												<div class="item-navigation"> 
+													{% if len(dic_essence) > 0 %}
+													<div class="arrow-right" onclick="showArborescence(this)"></div> 
+													{% else %}
+													<div class="no-arrow"></div> 
+													{% end %} 
+													<a href={{ str(path_url) + "/library/" + str(collectionkey) + "/" + str(itemkey) + ".ite" }} class="btn btn-outline-primary btn-lg m-3" role="button">
+													{{ itemkey }}
+													</a> 
+												</div> 
+												{% for essencekey, essencevalue in dic_essence.items() %}
 												<ul>
-													<div class="essence-navigation-hide"> <a href={{ str(path_url) + "/library/" + str(collectionkey) + "/" + str(itemkey) + "/" + str(essencekey) + ".ess" }} class="btn btn-outline-primary btn-lg m-3" role="button">
-                                             {{ essencekey }}
-                                             </a> </div>
-												</ul> {% end %} </div>
-										</ul> {% end %} </div>
+													<div class="essence-navigation-hide"> 
+														<a href={{ str(path_url) + "/library/" + str(collectionkey) + "/" + str(itemkey) + "/" + str(essencekey) + ".ess" }} class="btn btn-outline-primary btn-lg m-3" role="button">
+														{{ essencekey }}
+														</a> 
+													</div>
+												</ul> 
+												{% end %} 
+											</div>
+										</ul> 
+										{% end %} 
+									</div>
 								</ul>
 							</td>
-						</tr> {% end %} </tbody>
+						</tr> 
+						{% end %} 
+					</tbody>
 				</table>
 			</div>
 		</div>

@@ -22,15 +22,21 @@
 					<div id="navbarContent" class="collapse navbar-collapse">
 						<ul class="navbar-nav navbar-custom">
 							<li class="nav-item active"> <a class="nav-link" href={{ str(path_url) + "/home" }}>Accueil</a> </li>
-							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/library" }}>Bibliothèque</a> </li> {% if label_user is None %}
-							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/login" }}>Se connecter</a> </li> {% else %}
+							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/library" }}>Bibliothèque</a> </li> 
+							{% if label_user is None %}
+							<li class="nav-item"> 
+								<a class="nav-link" href={{ str(path_url) + "/login" }}>Se connecter</a> 
+							</li> 
+							{% else %}
 							<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                            {{ label_user }}
                            </a>
 								<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
 									<li><a class="dropdown-item" href={{ str(path_url) + "/logout" }}>Déconnexion</a></li>
 								</ul>
-							</li> {% end %} </ul>
+							</li> 
+							{% end %} 
+						</ul>
 					</div>
 				</nav>
 			</div>
@@ -52,7 +58,11 @@
 							<button type="submit" value="send" class="btn btn-outline-primary btn-lg ms-2 button-width-180" role="button">Recherche</button>
 						</div>
 					</form>
-				</div> {% if search_results is not None %} {% raw search_results %} {% end %} </div>
+				</div> 
+				{% if search_results is not None %} 
+					{% raw search_results %} 
+				{% end %} 
+			</div>
 		</div>
 	</div>
 	<!-- Pied de page -->

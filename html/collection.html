@@ -23,15 +23,18 @@
 					<div id="navbarContent" class="collapse navbar-collapse">
 						<ul class="navbar-nav navbar-custom">
 							<li class="nav-item active"> <a class="nav-link" href={{ str(path_url) + "/home" }}>Accueil</a> </li>
-							<li class="nav-item active"> <a class="nav-link" href={{ str(path_url) + "/library" }}>Bibliothèque</a> </li> {% if label_user is None %}
-							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/login" }}>Se connecter</a> </li> {% else %}
-							<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                           {{ label_user }}
-                           </a>
+							<li class="nav-item active"> <a class="nav-link" href={{ str(path_url) + "/library" }}>Bibliothèque</a> </li> 
+							{% if label_user is None %}
+							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/login" }}>Se connecter</a> </li> 
+							{% else %}
+							<li class="nav-item dropdown"> 
+								<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">{{ label_user }}</a>
 								<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
 									<li><a class="dropdown-item" href={{ str(path_url) + "/logout" }}>Déconnexion</a></li>
 								</ul>
-							</li> {% end %} </ul>
+							</li> 
+							{% end %} 
+						</ul>
 					</div>
 				</nav>
 			</div>
@@ -52,35 +55,62 @@
 			<h4>- Item -</h4>
 			<div id="collection-table">
 				<table>
-					<tbody> {% for itemkey, dic_essence in dic_general.items() %}
+					<tbody> 
+						{% for itemkey, dic_essence in dic_general.items() %}
 						<tr>
 							<td>
 								<ul class="arbo-direction-column">
 									<div class="item-container">
-										<div class="item-navigation"> {% if len(dic_essence) > 0 %}
-											<div class="arrow-right" onclick="showArborescence(this)"></div> {% else %}
-											<div class="no-arrow"></div> {% end %} <a href={{ str(path_url) + "/library/" + str(idCollection) + "/" + str(itemkey) + ".ite" }} class="btn btn-outline-primary btn-lg m-3" role="button">
-                                 {{ itemkey }}
-                                 </a> </div> {% for essencekey, essencevalue in dic_essence.items() %}
+										<div class="item-navigation"> 
+											{% if len(dic_essence) > 0 %}
+											<div class="arrow-right" onclick="showArborescence(this)"></div> 
+											{% else %}
+											<div class="no-arrow"></div> 
+											{% end %} 
+											<a href={{ str(path_url) + "/library/" + str(idCollection) + "/" + str(itemkey) + ".ite" }} class="btn btn-outline-primary btn-lg m-3" role="button">
+											{{ itemkey }}
+											</a>
+										</div> 
+										{% for essencekey, essencevalue in dic_essence.items() %}
 										<ul>
-											<div class="essence-navigation-hide"> <a href={{ str(path_url) + "/library/" + str(idCollection) + "/" + str(itemkey) + "/" + str(essencekey) + ".ess" }} class="btn btn-outline-primary btn-lg m-3" role="button">
-                                    {{ essencekey }}
-                                    </a> </div>
-										</ul> {% end %} </div>
+											<div class="essence-navigation-hide"> 
+												<a href={{ str(path_url) + "/library/" + str(idCollection) + "/" + str(itemkey) + "/" + str(essencekey) + ".ess" }} class="btn btn-outline-primary btn-lg m-3" role="button">
+												{{ essencekey }}
+												</a> 
+											</div>
+										</ul>
+										{% end %}
+									</div>
 								</ul>
 							</td>
-						</tr> {% end %} </tbody>
+						</tr> 
+						{% end %} 
+					</tbody>
 				</table>
 			</div>
 			<div class="mb-4">
 				<h4 class="text-center mb-4">- Desciption -</h4>
-				<ul class="list-group"> {% for key in dicCollection.keys() %} {% if type(dicCollection[key]) == list %} {% if type(dicCollection[key][0][0]) == list %}
-					<li class="list-group-item"> <strong>{{ key }} :</strong>
-						<br/> {% for listElement in dicCollection[key] %} ____________
-						<br/> {% for element in listElement %} {{ element[0] }} : {{ element[1] }}
-						<br/> {% end %} {% end %} </li> {% else %} {% for element in dicCollection[key] %}
-					<li class="list-group-item"><strong>{{ element[0] }} : </strong>{{ element[1] }} </li> {% end %} {% end %} {% else %}
-					<li class="list-group-item"><strong>{{ key }} : </strong>{{ dicCollection[key] }}</li> {% end %} {% end %} </ul>
+				<ul class="list-group"> 
+					{% for key in dicCollection.keys() %} 
+						{% if type(dicCollection[key]) == list %} 
+							{% if type(dicCollection[key][0][0]) == list %}
+							<li class="list-group-item"> <strong>{{ key }} :</strong>
+								<br/> 
+								{% for listElement in dicCollection[key] %} ____________
+									<br/> {% for element in listElement %} {{ element[0] }} : {{ element[1] }}
+									<br/> {% end %} 
+								{% end %} 
+							</li> 
+							{% else %} 
+								{% for element in dicCollection[key] %}
+								<li class="list-group-item"><strong>{{ element[0] }} : </strong>{{ element[1] }} </li> 
+								{% end %} 
+							{% end %}
+						{% else %}
+						<li class="list-group-item"><strong>{{ key }} : </strong>{{ dicCollection[key] }}</li> 
+						{% end %} 
+					{% end %}
+				</ul>
 			</div>
 		</div>
 		<!-- Pied de page -->

@@ -34,15 +34,20 @@
 										</ul>
 									</ul>
 								</ul>
-							</li> {% if label_user is None %}
-							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/login" }}>Se connecter</a> </li> {% else %}
-							<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                           {{ label_user }}
-                           </a>
+							</li> 
+							{% if label_user is None %}
+							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/login" }}>Se connecter</a> </li> 
+							{% else %}
+							<li class="nav-item dropdown"> 
+								<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+								{{ label_user }}
+								</a>
 								<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
 									<li><a class="dropdown-item" href={{ str(path_url) + "/logout" }}>Déconnexion</a></li>
 								</ul>
-							</li> {% end %} </ul>
+							</li> 
+							{% end %} 
+						</ul>
 					</div>
 				</nav>
 			</div>
@@ -55,21 +60,43 @@
 			<div class="border border-secondary m-4 p-3 rounded-3">
 				<h1>Document : {{ name }} </h1> </div>
 			<div class="mb-4">
-				<h4 class="text-center my-4">- Aperçu -</h4> {% if name is not None %} {% if name.endswith((".mp3",".mp4",".MP4",".MP3")) %}
-				<div class="col-11 col-md-8 mx-auto">
-					<iframe class="embed-responsive-item" src="{{ static_url((" data/library/collection/ " + str(idCollection) + "/item/ " + str(idItem) + "/essence/ " + str(idEssence) + "/ " + name).replace(' ', '%20')) }}" frameborder="0" allowfullscreen> </iframe>
-				</div> {% elif name.endswith((".png",".jpg",".gif",".PNG",".JPG",".GIF")) %}
-				<div class="col-11 col-md-8 mx-auto"> <img class="w-100 shadow" src="{{ static_url((" data/library/collection/ " + str(idCollection) + "/item/ " + str(idItem) + "/essence/ " + str(idEssence) + "/ " + name).replace(' ', '%20')) }}" alt="Doc"> </div> {% else %}
-				<p class="border mx-auto border-secondary rounded p-3 col col-md-6">Pas d'aperçu disponible pour ce type de fichier </br> Lien de téléchargment du fichier ici : <a href="{{ static_url((" data/library/collection/ " + str(idCollection) + "/item/ " + str(idItem) + "/essence/ " + str(idEssence) + "/ " + name).replace(' ', '%20')) }}" download={{ static_url(( "data/library/collection/" + str(idCollection) + "/item/" + str(idItem) + "/essence/" + str(idEssence) + "/" + name).replace( ' ', '%20')) }}>"Télécharger le fichier"</a> </p> {% end %} {% else %}
-				<p class="mt-4">Cette essence ne possède pas de document</p> {% end %}
+				<h4 class="text-center my-4">- Aperçu -</h4> 
+				{% if name is not None %} 
+					{% if name.endswith((".mp3",".mp4",".MP4",".MP3")) %}
+					<div class="col-11 col-md-8 mx-auto">
+						<iframe class="embed-responsive-item" src="{{ static_url((" data/library/collection/ " + str(idCollection) + "/item/ " + str(idItem) + "/essence/ " + str(idEssence) + "/ " + name).replace(' ', '%20')) }}" frameborder="0" allowfullscreen> </iframe>
+					</div> 
+					{% elif name.endswith((".png",".jpg",".gif",".PNG",".JPG",".GIF")) %}
+					<div class="col-11 col-md-8 mx-auto"> 
+						<img class="w-100 shadow" src="{{ static_url((" data/library/collection/ " + str(idCollection) + "/item/ " + str(idItem) + "/essence/ " + str(idEssence) + "/ " + name).replace(' ', '%20')) }}" alt="Doc"> 
+					</div> 
+					{% else %}
+					<p class="border mx-auto border-secondary rounded p-3 col col-md-6">Pas d'aperçu disponible pour ce type de fichier </br> Lien de téléchargment du fichier ici : <a href="{{ static_url((" data/library/collection/ " + str(idCollection) + "/item/ " + str(idItem) + "/essence/ " + str(idEssence) + "/ " + name).replace(' ', '%20')) }}" download={{ static_url(( "data/library/collection/" + str(idCollection) + "/item/" + str(idItem) + "/essence/" + str(idEssence) + "/" + name).replace( ' ', '%20')) }}>"Télécharger le fichier"</a> </p> 
+					{% end %} 
+				{% else %}
+					<p class="mt-4">Cette essence ne possède pas de document</p> 
+				{% end %}
 				<h4 class="text-center my-4">- Desciption -</h4>
-				<ul class="list-group"> {% for key in dic.keys() %} {% if type(dic[key]) == list %} {% if type(dic[key][0][0]) == list %}
-					<li class="list-group-item"> <strong>{{ key }} :</strong>
-						<br/> {% for item in dic[key] %} ____________
-						<br/> {% for it in item %} {{ it[0] }} : {{ it[1] }}
-						<br/> {% end %} {% end %} </li> {% else %} {% for item in dic[key] %}
-					<li class="list-group-item"><strong>{{ item[0] }} : </strong>{{ item[1] }} </li> {% end %} {% end %} {% else %}
-					<li class="list-group-item"><strong>{{ key }} : </strong>{{ dic[key] }}</li> {% end %} {% end %} </ul>
+				<ul class="list-group"> 
+				{% for key in dic.keys() %} 
+					{% if type(dic[key]) == list %} 
+						{% if type(dic[key][0][0]) == list %}
+						<li class="list-group-item"> <strong>{{ key }} :</strong>
+							<br/> {% for item in dic[key] %} ____________
+								<br/> {% for it in item %} {{ it[0] }} : {{ it[1] }}
+								<br/> {% end %} 
+								{% end %} 
+						</li> 
+						{% else %} 
+							{% for item in dic[key] %}
+							<li class="list-group-item"><strong>{{ item[0] }} : </strong>{{ item[1] }} </li> 
+							{% end %} 
+						{% end %} 
+					{% else %}
+						<li class="list-group-item"><strong>{{ key }} : </strong>{{ dic[key] }}</li> 
+					{% end %} 
+				{% end %} 
+				</ul>
 			</div>
 		</div>
 		<!-- Pied de page -->
