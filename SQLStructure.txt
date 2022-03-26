@@ -23,3 +23,418 @@ CREATE TABLE papareo.user(
 	date_creation_timestamp TIMESTAMP,
 	private_access BOOLEAN
 )
+
+-- Function to jsonfy the tables
+-- FUNCTION: papareo.anavevo_jsonfy_function(character varying)
+
+-- DROP FUNCTION IF EXISTS papareo.anavevo_jsonfy_function(character varying);
+
+CREATE OR REPLACE FUNCTION papareo.anavevo_jsonfy_function(
+	_tablename character varying)
+    RETURNS json
+    LANGUAGE 'plpgsql'
+    COST 100
+    IMMUTABLE STRICT PARALLEL UNSAFE
+AS $BODY$
+	/*	Fonction anavevo_search_function: renvoie le HTML des résultats de la recherche saisie par l'utilisateur
+		Versions:
+			le 22/02/2022 (AM) Création
+			le 28/02/2022 (AM) Revue avec Hugues
+	*/
+
+DECLARE 
+
+	_strQuery VARCHAR := '';
+	_jsonTableValues JSON;
+
+BEGIN
+
+	_strQuery := 'SELECT json_agg(to_json((c))) FROM papareo.%s c';
+	
+	EXECUTE FORMAT(_strQuery, _tablename) INTO _jsonTableValues;
+	
+	RETURN _jsonTableValues;
+	
+END;
+$BODY$;
+
+ALTER FUNCTION papareo.anavevo_jsonfy_function(character varying)
+    OWNER TO postgres;
+
+-- Function to search element
+-- FUNCTION: papareo.anavevo_search_function(character varying)
+
+-- DROP FUNCTION IF EXISTS papareo.anavevo_search_function(character varying);
+
+CREATE OR REPLACE FUNCTION papareo.anavevo_search_function(
+	_strsearchinputtext character varying)
+    RETURNS character varying
+    LANGUAGE 'plpgsql'
+    COST 100
+    IMMUTABLE STRICT PARALLEL UNSAFE
+AS $BODY$
+	/*	Fonction anavevo_search_function: renvoie le HTML des résultats de la recherche saisie par l'utilisateur
+		Versions:
+			le 22/02/2022 (AM) Création
+			le 28/02/2022 (AM) Revue avec Hugues + gestion du tahitien
+	*/
+
+DECLARE 
+
+	_strHTML VARCHAR := '';
+	_strHTMLContent VARCHAR;
+	_charPlural CHAR(1);
+	_intCount INTEGER := 0;
+
+BEGIN
+
+	_strHTML := _strHTML || '<div class="search-results-container">';
+	_strHTML := _strHTML || 		'<div class="search-summary">';
+	_strHTML := _strHTML || 			'<div class="search-summary-title">';
+	_strHTML := _strHTML || 				'<h4>Nombre de résultats:</h4>';
+	_strHTML := _strHTML || 			'</div>';
+	_strHTML := _strHTML || 			'<div class="search-summary-results">';
+
+	SELECT COUNT(*) INTO _intCount
+	FROM papareo.entree
+ 	WHERE to_tsvector('french', html) || to_tsvector('french', html)
+	@@ to_tsquery('french', regexp_replace(_strsearchinputtext, '\s+', ' & ', 'gi'));
+	
+	IF _intCount > 0 THEN
+	
+		IF _intCount > 1 THEN
+			_charPlural := 's';
+		END IF;
+		
+		_strHTML := _strHTML || 				'<p>%s résultat%s trouvé%s.</p>';
+		_strHTML := _strHTML ||			'</div>';
+		_strHTML := _strHTML ||		'</div>';
+		_strHTML := _strHTML || 		'<div class="search-results">';
+		_strHTML := _strHTML || 			'<div class="search-results-title">';
+		_strHTML := _strHTML ||				'<h4>Résultats de la recherche:</h4>';
+		_strHTML := _strHTML || 			'</div>';
+		_strHTML := _strHTML ||			'<div class="search-results-content">';
+		_strHTML := _strHTML || 				'%s';
+		_strHTML := _strHTML ||			'</div>';
+		_strHTML := _strHTML || 		'</div>';
+		_strHTML := _strHTML || 	'</div>';
+		
+		SELECT string_agg(html, '<br>') into _strHTMLContent
+		FROM papareo.entree
+		WHERE to_tsvector('french', html)
+		@@ to_tsquery('french', regexp_replace(_strsearchinputtext, '\s+', ' & ', 'gi'));
+
+		_strHTML := FORMAT(_strHTML, _intCount, _charPlural, _charPlural, _strHTMLContent);
+
+	ELSE
+		_strHTML := _strHTML || 				'<p>Aucun résultat trouvé.</p>';
+		_strHTML := _strHTML || 			'</div>';
+		_strHTML := _strHTML || 		'</div>';
+		_strHTML := _strHTML || 	'</div>';		
+	END IF;
+	
+	RETURN _strHTML;
+	
+END;
+$BODY$;
+
+ALTER FUNCTION papareo.anavevo_search_function(character varying)
+    OWNER TO postgres;
+
+-- Table qui stocke les index de recherche
+CREATE TABLE papareo.entry(
+	id SERIAL PRIMARY KEY,
+	id_collection INTEGER,
+	id_item INTEGER,
+	id_essence INTEGER,
+	html TEXT,
+	collectionhtml TEXT,
+	itemhtml TEXT,
+	essencehtml TEXT,
+	contenu TEXT[]
+)
+
+-- Requête INSERT dans la table entry
+INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, contenu_sans_accent, htmllink, htmlsummary)
+
+	-- Requête pour récupérer uniquement les collections
+	(SELECT 
+	collection.id,
+	NULL,
+	CAST (NULL AS INTEGER),
+	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(CONCAT(collection.title, ' ', collection.description)), '\s+', '<*>', 'gi'), '<*>') as contenu_accent,
+	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(CONCAT(collection.title, ' ', collection.description)), True), '\s+', '<*>', 'gi'), '<*>') as contenu_sans_accent,
+	concat('<a href="http://localhost:8888/library/', 
+		   CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
+		   '.col" ',
+		   ' class="btn btn-outline-primary btn-lg m-3" role="button">',
+		   CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
+		   '</a>'),
+	concat('<div class="text-result-summary">',
+		   '<p class="title-text-result">',
+		   collection.title,
+		   '</p>',
+		   '<p class="description-text-result">',
+		   collection.description,
+		   '</p>',
+		   '</div>'
+	)
+	FROM papareo.collection
+	WHERE collection.id IS NOT NULL)
+	
+	UNION ALL
+	-- Requête pour récupérer uniquement les items
+	(SELECT 
+	collection.id,
+	item.id,
+	CAST(NULL AS INTEGER),
+	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(CONCAT(item.title, ' ', item.description)), '\s+', '<*>', 'gi'), '<*>') as contenu_accent,
+	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(CONCAT(item.title, ' ', item.description)), True), '\s+', '<*>', 'gi'), '<*>') as contenu_sans_accent,
+	concat('<a href="http://localhost:8888/library/', 
+	CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
+	'/', 
+	CASE WHEN item.identifier IS NOT NULL THEN concat(CAST(item.id AS TEXT), '-', item.identifier) ELSE concat(CAST(item.id AS TEXT)) END,
+	'.ite" ',
+	' class="btn btn-outline-primary btn-lg m-3" role="button">',
+	CASE WHEN item.identifier IS NOT NULL THEN concat(CAST(item.id AS TEXT), '-', item.identifier) ELSE concat(CAST(item.id AS TEXT)) END,
+	'</a>'),
+	concat('<div class="text-result-summary">',
+		   '<p class="title-text-result">',
+		   item.title,
+		   '</p>',
+		   '<p class="description-text-result">',
+		   item.description,
+		   '</p>',
+		   '</div>'
+	)
+	FROM papareo.collection
+	INNER JOIN papareo.item on collection.id = item.collection_id
+	WHERE item.id IS NOT NULL)
+
+	UNION ALL
+	-- Requête pour insérer le HTML des essences (pas de contenu)
+	(SELECT 
+	collection.id,
+	item.id,
+	essence.id,
+	NULL,
+	NULL,
+	concat('<ul><div class="essence-navigation-hide">',
+	'<a href="http://localhost:8888/library/', 
+	CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
+	'/', 
+	CASE WHEN item.identifier IS NOT NULL THEN concat(CAST(item.id AS TEXT), '-', item.identifier) ELSE concat(CAST(item.id AS TEXT)) END,
+	'/', essence.id, '.ess" ',
+	' class="btn btn-outline-primary btn-lg m-3" role="button">',
+	essence.id,
+	'</a>'
+	'</div></ul>'),
+	 NULL
+	FROM papareo.collection
+	INNER JOIN papareo.item ON collection.id = item.collection_id
+	INNER JOIN papareo.essence ON item.id = essence.item_id
+	WHERE essence.id IS NOT NULL)
+
+
+
+-- New Search Request
+-- FUNCTION: papareo.anavevo_search_function(character varying)
+
+-- DROP FUNCTION IF EXISTS papareo.anavevo_search_function(character varying);
+
+CREATE OR REPLACE FUNCTION papareo.anavevo_search_function(
+	_strsearchinputtext character varying)
+    RETURNS character varying
+    LANGUAGE 'plpgsql'
+    COST 100
+    IMMUTABLE STRICT PARALLEL UNSAFE
+AS $BODY$
+	/*	Fonction anavevo_search_function: renvoie le HTML des résultats de la recherche saisie par l'utilisateur
+		Versions:
+			le 22/02/2022 (AM) Création
+			le 28/02/2022 (AM) Revue avec Hugues + gestion du tahitien
+			le 24/03/2022 (AM) Eclatage propre du html, recherche sur la bonne colonne
+			le 25/03/2022 (AM) Construction de toute la structure HTML en une requête correcte, pour resortir uniquement les éléments de la recherche
+	*/
+
+DECLARE 
+
+	_strHTML VARCHAR := '';
+	_strHTMLContent VARCHAR;
+	_charPlural CHAR(1);
+	_intCount INTEGER := 0;
+
+BEGIN
+
+	_strHTML := _strHTML || '<div class="search-results-container">';
+	_strHTML := _strHTML || 		'<div class="search-summary">';
+	_strHTML := _strHTML || 			'<div class="search-summary-title">';
+	_strHTML := _strHTML || 				'<h4>Nombre de résultats:</h4>';
+	_strHTML := _strHTML || 			'</div>';
+	_strHTML := _strHTML || 			'<div class="search-summary-results">';
+
+	SELECT COUNT(*) INTO _intCount
+	FROM papareo.entry
+ 	WHERE entry.contenu_sans_accent @> 
+	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(_strsearchinputtext), True), '\s+', '<*>', 'gi'), '<*>');
+	
+	/*SELECT COUNT(*) INTO _intCount
+	FROM papareo.entree
+ 	WHERE to_tsvector('french', html) || to_tsvector('french', html)
+	@@ to_tsquery('french', regexp_replace(_strsearchinputtext, '\s+', ' & ', 'gi'));*/
+	
+	IF _intCount > 0 THEN
+	
+		IF _intCount > 1 THEN
+			_charPlural := 's';
+		END IF;
+		
+		_strHTML := _strHTML || 				'<p>%s résultat%s trouvé%s.</p>';
+		_strHTML := _strHTML ||			'</div>';
+		_strHTML := _strHTML ||		'</div>';
+		_strHTML := _strHTML || 		'<div class="search-results">';
+		_strHTML := _strHTML || 			'<div class="search-results-title">';
+		_strHTML := _strHTML ||				'<h4>Résultats de la recherche ''%s'':</h4>';
+		_strHTML := _strHTML || 			'</div>';
+		_strHTML := _strHTML ||			'<div class="search-results-content">';
+		_strHTML := _strHTML || 				'%s';
+		_strHTML := _strHTML ||			'</div>';
+		_strHTML := _strHTML || 		'</div>';
+		_strHTML := _strHTML || 	'</div>';
+		
+		-- Requête pour constuire le HTML des résultats issus de la recherche
+		with uniquecollection as (
+			SELECT DISTINCT entry.htmllink, entry.htmlsummary, entry.id_collection
+			FROM papareo.entry
+			WHERE entry.contenu_sans_accent @> 
+			STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(_strsearchinputtext), True), '\s+', '<*>', 'gi'), '<*>')
+			AND entry.htmllink IS NOT NULL
+			AND entry.id_collection IS NOT NULL
+			AND entry.id_item IS NULL
+			AND entry.id_essence IS NULL
+		), uniqueitem as (
+			SELECT DISTINCT entry.htmllink, entry.htmlsummary, entry.id_collection, entry.id_item, entry.id_essence --entry.id, entry.id_item
+			from uniquecollection
+			inner join papareo.entry on entry.id_collection = uniquecollection.id_collection
+			WHERE entry.contenu_sans_accent @> 
+			STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(_strsearchinputtext), True), '\s+', '<*>', 'gi'), '<*>')
+			AND entry.htmllink IS NOT NULL
+			AND entry.id_collection IS NOT NULL
+			AND entry.id_item IS NOT NULL
+			AND entry.id_essence IS NULL
+		), uniqueessence as (
+			SELECT DISTINCT entry.htmllink, entry.id_item, entry.id_essence
+			FROM uniqueitem
+			INNER JOIN papareo.entry ON entry.id_collection = uniqueitem.id_collection AND entry.id_item = uniqueitem.id_item
+			--WHERE array_to_tsvector(entry.contenu)
+			--@@ to_tsquery('french', regexp_replace('pêche', '\s+', ' & ', 'gi'))
+			AND entry.htmllink IS NOT NULL
+			AND entry.id_collection IS NOT NULL
+			AND entry.id_item IS NOT NULL
+			AND entry.id_essence IS NOT NULL
+		)
+		SELECT
+		string_agg(concat('<tr>',
+					'<td>',
+						'<ul class="arbo-direction-column">',
+							'<div class="collection-container">',
+								'<div class="collection-navigation">', 
+			   						CASE WHEN (SELECT 
+									string_agg(concat('<ul>', 
+														'<div class="item-container-show">',
+																'<div class="item-navigation">', 
+																	CASE WHEN (SELECT string_agg(uniqueessence.htmllink, '') 
+																			FROM uniqueessence
+																			WHERE uniqueessence.id_item = uniqueitem.id_item
+																			AND uniqueessence.id_essence IS NOT NULL
+																			GROUP BY uniqueessence.id_item
+																			) IS NOT NULL THEN
+																	'<div class="arrow-right" onclick="showSearchArborescence(this)"></div>'
+																	ELSE 
+																	'<div class="no-arrow"></div>'
+																	END,
+																	uniqueitem.htmllink,
+																'</div>',
+																uniqueitem.htmlsummary,
+																(SELECT string_agg(uniqueessence.htmllink, '') 
+																FROM uniqueessence
+																WHERE uniqueessence.id_item = uniqueitem.id_item
+																AND uniqueessence.id_essence IS NOT NULL
+																GROUP BY uniqueessence.id_item
+																),
+														'</div>',
+													'</ul>'
+									), '')
+									FROM uniqueitem
+									WHERE uniqueitem.id_collection = uniquecollection.id_collection
+									AND uniqueitem.id_collection IS NOT NULL
+									AND uniqueitem.id_item IS NOT NULL
+									AND uniqueitem.id_essence IS NULL
+									GROUP BY uniqueitem.id_collection
+									) IS NOT NULL THEN 
+									'<div class="arrow-down" onclick="showSearchArborescence(this)"></div>'
+			   						ELSE
+						  			'<div class="no-arrow"></div>'
+						  			END,
+									uniquecollection.htmllink,
+								'</div>',
+								uniquecollection.htmlsummary,
+								(SELECT 
+								string_agg(concat('<ul>', 
+													'<div class="item-container-show">',
+															'<div class="item-navigation">', 
+																CASE WHEN (SELECT string_agg(uniqueessence.htmllink, '') 
+																		FROM uniqueessence
+																		WHERE uniqueessence.id_item = uniqueitem.id_item
+																		AND uniqueessence.id_essence IS NOT NULL
+																		GROUP BY uniqueessence.id_item
+																		) IS NOT NULL THEN
+																'<div class="arrow-right" onclick="showSearchArborescence(this)"></div>'
+																ELSE 
+																'<div class="no-arrow"></div>'
+																END,
+																uniqueitem.htmllink,
+															'</div>',
+															uniqueitem.htmlsummary,
+															(SELECT string_agg(uniqueessence.htmllink, '') 
+															FROM uniqueessence
+															WHERE uniqueessence.id_item = uniqueitem.id_item
+															AND uniqueessence.id_essence IS NOT NULL
+															GROUP BY uniqueessence.id_item
+															),
+													'</div>',
+												'</ul>'
+								), '')
+								FROM uniqueitem
+								WHERE uniqueitem.id_collection = uniquecollection.id_collection
+								AND uniqueitem.id_collection IS NOT NULL
+								AND uniqueitem.id_item IS NOT NULL
+								AND uniqueitem.id_essence IS NULL
+								GROUP BY uniqueitem.id_collection
+								),
+							'</div>',
+						'</ul>',
+					'</td>',
+				'</tr>'
+		), '')
+		INTO _strHTMLContent
+		FROM uniquecollection;
+						
+		_strHTML := FORMAT(_strHTML, _intCount, _charPlural, _charPlural, _strsearchinputtext, _strHTMLContent);
+
+	ELSE
+		_strHTML := _strHTML || 				'<p>Aucun résultat trouvé.</p>';
+		_strHTML := _strHTML || 			'</div>';
+		_strHTML := _strHTML || 		'</div>';
+		_strHTML := _strHTML || 	'</div>';		
+	END IF;
+
+	RETURN _strHTML;
+	
+END;
+$BODY$;
+
+ALTER FUNCTION papareo.anavevo_search_function(character varying)
+    OWNER TO postgres;
+
+
