@@ -261,6 +261,7 @@ DECLARE
 
 	_strHTML VARCHAR := '';
 	_strHTMLContent VARCHAR;
+	_strFormRegexpMatches VARCHAR := '';
 	_charPlural CHAR(1);
 	_intCount INTEGER := 0;
 
@@ -302,9 +303,10 @@ BEGIN
 		_strHTML := _strHTML || 		'</div>';
 		_strHTML := _strHTML || 	'</div>';
 		
+		select REGEXP_REPLACE(_strsearchinputtext, '\s+', '|', 'gi') into _strFormRegexpMatches;
 		-- Requête pour constuire le HTML des résultats issus de la recherche
 		with uniquecollection as (
-			SELECT DISTINCT entry.htmllink, entry.htmlsummary, entry.id_collection
+			SELECT DISTINCT entry.htmllink, entry.htmlsummary, entry.id_collection, entry.id
 			FROM papareo.entry
 			WHERE entry.contenu_sans_accent @> 
 			STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(_strsearchinputtext), True), '\s+', '<*>', 'gi'), '<*>')
@@ -332,14 +334,25 @@ BEGIN
 			AND entry.id_collection IS NOT NULL
 			AND entry.id_item IS NOT NULL
 			AND entry.id_essence IS NOT NULL
-		)
-		SELECT
-		string_agg(concat('<tr>',
-					'<td>',
-						'<ul class="arbo-direction-column">',
-							'<div class="collection-container">',
-								'<div class="collection-navigation">', 
-			   						CASE WHEN (SELECT 
+		), htmlline as (
+			SELECT
+			concat('<tr>',
+						'<td>',
+							'<ul class="arbo-direction-column">',
+								'<div class="collection-container">',
+									'<div class="collection-navigation">', 
+										'<div class="arrow-down" onclick="showSearchArborescence(this)"></div>',
+										uniquecollection.htmllink,
+									'</div>',
+									/*regexp_replace(uniquecollection.htmlsummary,
+								   ARRAY_TO_STRING(regexp_matches(uniquecollection.htmlsummary, 'title-text-result">(.*?)<'), ''),
+								   regexp_replace(ARRAY_TO_STRING(regexp_matches(uniquecollection.htmlsummary, 'title-text-result">(.*?)<'), ''), 
+								   ARRAY_TO_STRING(regexp_matches(ARRAY_TO_STRING(regexp_matches(uniquecollection.htmlsummary, 'title-text-result">(.*?)<'), ''), 'pêche', 'gi'), ''), 
+								   REGEXP_REPLACE('<span class="test">*</span>', '\*', 'pêche', 'gi'), 
+								   'gi'),
+								   'gi'),*/
+									uniquecollection.htmlsummary,
+									(SELECT 
 									string_agg(concat('<ul>', 
 														'<div class="item-container-show">',
 																'<div class="item-navigation">', 
@@ -371,54 +384,65 @@ BEGIN
 									AND uniqueitem.id_item IS NOT NULL
 									AND uniqueitem.id_essence IS NULL
 									GROUP BY uniqueitem.id_collection
-									) IS NOT NULL THEN 
-									'<div class="arrow-down" onclick="showSearchArborescence(this)"></div>'
-			   						ELSE
-						  			'<div class="no-arrow"></div>'
-						  			END,
-									uniquecollection.htmllink,
+									),
 								'</div>',
-								uniquecollection.htmlsummary,
-								(SELECT 
-								string_agg(concat('<ul>', 
-													'<div class="item-container-show">',
-															'<div class="item-navigation">', 
-																CASE WHEN (SELECT string_agg(uniqueessence.htmllink, '') 
-																		FROM uniqueessence
-																		WHERE uniqueessence.id_item = uniqueitem.id_item
-																		AND uniqueessence.id_essence IS NOT NULL
-																		GROUP BY uniqueessence.id_item
-																		) IS NOT NULL THEN
-																'<div class="arrow-right" onclick="showSearchArborescence(this)"></div>'
-																ELSE 
-																'<div class="no-arrow"></div>'
-																END,
-																uniqueitem.htmllink,
-															'</div>',
-															uniqueitem.htmlsummary,
-															(SELECT string_agg(uniqueessence.htmllink, '') 
-															FROM uniqueessence
-															WHERE uniqueessence.id_item = uniqueitem.id_item
-															AND uniqueessence.id_essence IS NOT NULL
-															GROUP BY uniqueessence.id_item
-															),
-													'</div>',
-												'</ul>'
-								), '')
-								FROM uniqueitem
-								WHERE uniqueitem.id_collection = uniquecollection.id_collection
-								AND uniqueitem.id_collection IS NOT NULL
-								AND uniqueitem.id_item IS NOT NULL
-								AND uniqueitem.id_essence IS NULL
-								GROUP BY uniqueitem.id_collection
-								),
-							'</div>',
-						'</ul>',
-					'</td>',
-				'</tr>'
-		), '')
+							'</ul>',
+						'</td>',
+					'</tr>'
+			) as concat,
+			uniquecollection.id
+			FROM uniquecollection
+		), string_regex_match_list as (
+			select concat('\y', array_to_string(regexp_matches(CONCAT('<*>', REGEXP_REPLACE(_strsearchinputtext, '\s+', '<*>', 'gi'), '<*>'), '>(.*?)<', 'gi'), ''), '\y') as string_regex
+		), array_regex_match as (
+			select array_agg(string_regex_match_list.string_regex) as array_regex from string_regex_match_list
+		), string_regex_replace_list as (
+			select concat('<span class="mark-result">',
+						  array_to_string(regexp_matches(CONCAT('<*>',
+																REGEXP_REPLACE(array_to_string(regexp_matches(array_to_string(regexp_matches(htmlline.concat, 'title-text-result">(.*?)<', 'gi'), ''), _strFormRegexpMatches, 'gi'), ''), '\s+', '<*>'),
+																'<*>'),
+														'>(.*?)<',
+														'gi'), ''),
+						'</span>') 
+			as string_regex,
+			htmlline.id,
+			htmlline.concat as htmlsummary
+			from htmlline
+			--where entry.contenu_sans_accent @> 
+			--STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER('pêche récit'), True), '\s+', '<*>', 'gi'), '<*>')
+		), array_regex_replace as (
+			select array_agg(string_regex_replace_list.string_regex) as array_replace, 
+			array_regex_match.array_regex as array_match,
+			string_regex_replace_list.htmlsummary, 
+			string_regex_replace_list.id 
+			from string_regex_replace_list, array_regex_match
+			group by string_regex_replace_list.id, array_regex_match.array_regex, string_regex_replace_list.htmlsummary
+		), general_array as (
+			select 
+			--array_regex_replace.array_match,
+			--array_regex_replace.array_replace,
+			array_regex_replace.id,
+			array_to_string(regexp_matches(htmlline.concat, 'title-text-result">(.*?)<', 'gi'), '') as test ,
+			papareo.regexp_remplacechaque(array_to_string(regexp_matches(htmlline.concat, 'title-text-result">(.*?)<', 'gi'), ''), 
+										  array_regex_replace.array_match, 
+										  array_regex_replace.array_replace,
+										  'gi') as test1		
+			from htmlline
+			inner join array_regex_replace on array_regex_replace.id = htmlline.id
+			group by array_regex_replace.id, htmlline.concat, array_regex_replace.array_match, array_regex_replace.array_replace
+		), general_agg as (
+			select array_agg(test) as test, array_agg(test1) as test1, id 
+			from general_array
+			group by id
+		)
+		SELECT 
+		string_agg(papareo.regexp_remplacechaque(htmlline.concat, 
+									  general_agg.test,
+									  general_agg.test1,
+									  'gi'), '')
 		INTO _strHTMLContent
-		FROM uniquecollection;
+		FROM general_agg
+		INNER JOIN htmlline on htmlline.id = general_agg.id;
 						
 		_strHTML := FORMAT(_strHTML, _intCount, _charPlural, _charPlural, _strsearchinputtext, _strHTMLContent);
 
@@ -436,5 +460,3 @@ $BODY$;
 
 ALTER FUNCTION papareo.anavevo_search_function(character varying)
     OWNER TO postgres;
-
-
