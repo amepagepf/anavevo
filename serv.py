@@ -1,7 +1,6 @@
 # encoding: UTF-8
 
 import tornado.httpserver
-from OpenSSL import SSL
 import tornado.ioloop
 import tornado.web
 import tornado.options
@@ -22,7 +21,9 @@ from tornado.options import define, options
 # Define options
 define("port", default=8888, help="run on the given port", type=int)
 # BDD Configuration
-define("pgsql_host", default="127.0.0.1:5432", help="database host")
+define("pgsql_host", default="127.0.0.1", help="database host")
+define("pgsql_port", default="5432", help="database port")
+#define("pgsql_database", default="anavevo_recette", help="database name")
 define("pgsql_database", default="anavevodb", help="database name")
 define("pgsql_user", default="postgres", help="database user")
 define("pgsql_password", default="root", help="database password")
@@ -354,11 +355,11 @@ class HomeHandler(BaseHandler):
 
         try:
             connection = psycopg2.connect(
-                database = "anavevodb",
-                user = "postgres",
-                password = "root",
-                host = "localhost",
-                port = "5432")
+                database = options.pgsql_database,
+                user = options.pgsql_user,
+                password = options.pgsql_password,
+                host = options.pgsql_host,
+                port = options.pgsql_port)
             
             connection.set_session(readonly=True)
             
@@ -459,11 +460,11 @@ def checkUserRegisterInformation(dicGeneral):
         booUserInformationHasError = True
     
     connection = psycopg2.connect(
-        database = "anavevodb",
-        user = "postgres",
-        password = "root",
-        host = "localhost",
-        port = "5432")
+        database = options.pgsql_database,
+        user = options.pgsql_user,
+        password = options.pgsql_password,
+        host = options.pgsql_host,
+        port = options.pgsql_port)
     
     connection.set_session(readonly=True)
     
@@ -520,11 +521,11 @@ def setHashedPassword(dicGeneral):
     encode_password_64 = base64.b64encode(storage_password).decode('ascii')
 
     connection_user = psycopg2.connect(
-        database = "anavevodb",
-        user = "postgres",
-        password = "root",
-        host = "localhost",
-        port = "5432")
+        database = options.pgsql_database,
+        user = options.pgsql_user,
+        password = options.pgsql_password,
+        host = options.pgsql_host,
+        port = options.pgsql_port)
 
     try:
         cursor_user = connection_user.cursor()
@@ -550,11 +551,11 @@ def setHashedPassword(dicGeneral):
 def checkUserLoginConnexion(dicGeneral):
 
     connection = psycopg2.connect(
-            database = "anavevodb",
-            user = "postgres",
-            password = "root",
-            host = "localhost",
-            port = "5432")
+            database = options.pgsql_database,
+            user = options.pgsql_user,
+            password = options.pgsql_password,
+            host = options.pgsql_host,
+            port = options.pgsql_port)
         
     connection.set_session(readonly=True)
 
@@ -672,11 +673,11 @@ def setSessionUserId(dicUser):
     random_cookie_session_id = uuid.uuid4()
     
     connection_usersession = psycopg2.connect(
-        database = "anavevodb",
-        user = "postgres",
-        password = "root",
-        host = "localhost",
-        port = "5432")
+        database = options.pgsql_database,
+        user = options.pgsql_user,
+        password = options.pgsql_password,
+        host = options.pgsql_host,
+        port = options.pgsql_port)
         
     try :
         cursor_session = connection_usersession.cursor()

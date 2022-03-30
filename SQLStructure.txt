@@ -162,8 +162,8 @@ INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, co
 	collection.id,
 	NULL,
 	CAST (NULL AS INTEGER),
-	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(CONCAT(collection.title, ' ', collection.description)), '\s+', '<*>', 'gi'), '<*>') as contenu_accent,
-	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(CONCAT(collection.title, ' ', collection.description)), True), '\s+', '<*>', 'gi'), '<*>') as contenu_sans_accent,
+	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(TRIM(CONCAT(collection.title, ' ', collection.description))), '\s+', '<*>', 'gi'), '<*>') as contenu_accent,
+	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(TRIM(CONCAT(collection.title, ' ', collection.description))), True), '\s+', '<*>', 'gi'), '<*>') as contenu_sans_accent,
 	concat('<a href="http://localhost:8888/library/', 
 		   CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
 		   '.col" ',
@@ -188,8 +188,8 @@ INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, co
 	collection.id,
 	item.id,
 	CAST(NULL AS INTEGER),
-	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(CONCAT(item.title, ' ', item.description)), '\s+', '<*>', 'gi'), '<*>') as contenu_accent,
-	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(CONCAT(item.title, ' ', item.description)), True), '\s+', '<*>', 'gi'), '<*>') as contenu_sans_accent,
+	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(TRIM(CONCAT(item.title, ' ', item.description))), '\s+', '<*>', 'gi'), '<*>') as contenu_accent,
+	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(TRIM(CONCAT(item.title, ' ', item.description))), True), '\s+', '<*>', 'gi'), '<*>') as contenu_sans_accent,
 	concat('<a href="http://localhost:8888/library/', 
 	CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
 	'/', 
@@ -255,6 +255,8 @@ AS $BODY$
 			le 28/02/2022 (AM) Revue avec Hugues + gestion du tahitien
 			le 24/03/2022 (AM) Eclatage propre du html, recherche sur la bonne colonne
 			le 25/03/2022 (AM) Construction de toute la structure HTML en une requête correcte, pour resortir uniquement les éléments de la recherche
+			le 29/03/2022 (AM) La recherche plein texte sans ts_vector
+			le 30/03/2022 (AM) Ne rien renvoyer quand la recherche est vide
 	*/
 
 DECLARE 
@@ -267,69 +269,68 @@ DECLARE
 
 BEGIN
 
-	_strHTML := _strHTML || '<div class="search-results-container">';
-	_strHTML := _strHTML || 		'<div class="search-summary">';
-	_strHTML := _strHTML || 			'<div class="search-summary-title">';
-	_strHTML := _strHTML || 				'<h4>Nombre de résultats:</h4>';
-	_strHTML := _strHTML || 			'</div>';
-	_strHTML := _strHTML || 			'<div class="search-summary-results">';
-
+	SELECT CONCAT(
+	'<div class="search-results-container">',
+		'<div class="search-summary">',
+			'<div class="search-summary-title">',
+				'<h4>Nombre de résultats:</h4>',
+			'</div>',
+			'<div class="search-summary-results">')
+	INTO _strHTML;
+		
 	SELECT COUNT(*) INTO _intCount
 	FROM papareo.entry
  	WHERE entry.contenu_sans_accent @> 
-	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(_strsearchinputtext), True), '\s+', '<*>', 'gi'), '<*>');
-	
-	/*SELECT COUNT(*) INTO _intCount
-	FROM papareo.entree
- 	WHERE to_tsvector('french', html) || to_tsvector('french', html)
-	@@ to_tsquery('french', regexp_replace(_strsearchinputtext, '\s+', ' & ', 'gi'));*/
-	
+	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(CASE WHEN _strsearchinputtext = '' THEN 'TheArrayIsEmpty' ELSE _strsearchinputtext END), True), '\s+', '<*>', 'gi'), '<*>');
+		
 	IF _intCount > 0 THEN
 	
 		IF _intCount > 1 THEN
 			_charPlural := 's';
 		END IF;
 		
-		_strHTML := _strHTML || 				'<p>%s résultat%s trouvé%s.</p>';
-		_strHTML := _strHTML ||			'</div>';
-		_strHTML := _strHTML ||		'</div>';
-		_strHTML := _strHTML || 		'<div class="search-results">';
-		_strHTML := _strHTML || 			'<div class="search-results-title">';
-		_strHTML := _strHTML ||				'<h4>Résultats de la recherche ''%s'':</h4>';
-		_strHTML := _strHTML || 			'</div>';
-		_strHTML := _strHTML ||			'<div class="search-results-content">';
-		_strHTML := _strHTML || 				'%s';
-		_strHTML := _strHTML ||			'</div>';
-		_strHTML := _strHTML || 		'</div>';
-		_strHTML := _strHTML || 	'</div>';
+		SELECT CONCAT(_strHTML,
+					'<p>%s résultat%s trouvé%s.</p>',
+				'</div>',
+			'</div>',
+			'<div class="search-results">',
+				'<div class="search-results-title">',
+					'<h4>Résultats de la recherche ''%s'':</h4>',
+				'</div>',
+				'<div class="search-results-content">',
+						'%s',
+				'</div>',
+			'</div>',
+		'</div>')
+		INTO _strHTML;
 		
 		select REGEXP_REPLACE(_strsearchinputtext, '\s+', '|', 'gi') into _strFormRegexpMatches;
 		-- Requête pour constuire le HTML des résultats issus de la recherche
-		with uniquecollection as (
-			SELECT DISTINCT entry.htmllink, entry.htmlsummary, entry.id_collection, entry.id
+		with elementresults as (
+			SELECT DISTINCT entry.htmllink, entry.htmlsummary, entry.id_collection, entry.id_item, entry.id_essence, entry.id, entry.contenu_sans_accent
 			FROM papareo.entry
 			WHERE entry.contenu_sans_accent @> 
 			STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(_strsearchinputtext), True), '\s+', '<*>', 'gi'), '<*>')
-			AND entry.htmllink IS NOT NULL
+		), uniquecollection as (
+			SELECT DISTINCT entry.htmllink, entry.htmlsummary, entry.id_collection, entry.id
+			FROM papareo.entry
+			INNER JOIN elementresults ON elementresults.id_collection = papareo.entry.id_collection
+			WHERE entry.htmllink IS NOT NULL
 			AND entry.id_collection IS NOT NULL
 			AND entry.id_item IS NULL
 			AND entry.id_essence IS NULL
 		), uniqueitem as (
-			SELECT DISTINCT entry.htmllink, entry.htmlsummary, entry.id_collection, entry.id_item, entry.id_essence --entry.id, entry.id_item
-			from uniquecollection
-			inner join papareo.entry on entry.id_collection = uniquecollection.id_collection
-			WHERE entry.contenu_sans_accent @> 
-			STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(_strsearchinputtext), True), '\s+', '<*>', 'gi'), '<*>')
-			AND entry.htmllink IS NOT NULL
+			SELECT DISTINCT entry.htmllink, entry.htmlsummary, entry.id_collection, entry.id_item, entry.id_essence
+			FROM papareo.entry
+			INNER JOIN elementresults ON elementresults.id_collection = entry.id_collection AND elementresults.id_item = entry.id_item
+			WHERE entry.htmllink IS NOT NULL
 			AND entry.id_collection IS NOT NULL
 			AND entry.id_item IS NOT NULL
 			AND entry.id_essence IS NULL
 		), uniqueessence as (
 			SELECT DISTINCT entry.htmllink, entry.id_item, entry.id_essence
-			FROM uniqueitem
-			INNER JOIN papareo.entry ON entry.id_collection = uniqueitem.id_collection AND entry.id_item = uniqueitem.id_item
-			--WHERE array_to_tsvector(entry.contenu)
-			--@@ to_tsquery('french', regexp_replace('pêche', '\s+', ' & ', 'gi'))
+			FROM papareo.entry
+			INNER JOIN elementresults ON entry.id_collection = elementresults.id_collection AND entry.id_item = elementresults.id_item
 			AND entry.htmllink IS NOT NULL
 			AND entry.id_collection IS NOT NULL
 			AND entry.id_item IS NOT NULL
@@ -344,13 +345,6 @@ BEGIN
 										'<div class="arrow-down" onclick="showSearchArborescence(this)"></div>',
 										uniquecollection.htmllink,
 									'</div>',
-									/*regexp_replace(uniquecollection.htmlsummary,
-								   ARRAY_TO_STRING(regexp_matches(uniquecollection.htmlsummary, 'title-text-result">(.*?)<'), ''),
-								   regexp_replace(ARRAY_TO_STRING(regexp_matches(uniquecollection.htmlsummary, 'title-text-result">(.*?)<'), ''), 
-								   ARRAY_TO_STRING(regexp_matches(ARRAY_TO_STRING(regexp_matches(uniquecollection.htmlsummary, 'title-text-result">(.*?)<'), ''), 'pêche', 'gi'), ''), 
-								   REGEXP_REPLACE('<span class="test">*</span>', '\*', 'pêche', 'gi'), 
-								   'gi'),
-								   'gi'),*/
 									uniquecollection.htmlsummary,
 									(SELECT 
 									string_agg(concat('<ul>', 
@@ -396,7 +390,7 @@ BEGIN
 			select concat('\y', array_to_string(regexp_matches(CONCAT('<*>', REGEXP_REPLACE(_strsearchinputtext, '\s+', '<*>', 'gi'), '<*>'), '>(.*?)<', 'gi'), ''), '\y') as string_regex
 		), array_regex_match as (
 			select array_agg(string_regex_match_list.string_regex) as array_regex from string_regex_match_list
-		), string_regex_replace_list as (
+		), string_regex_replace_list_title as (
 			select concat('<span class="mark-result">',
 						  array_to_string(regexp_matches(CONCAT('<*>',
 																REGEXP_REPLACE(array_to_string(regexp_matches(array_to_string(regexp_matches(htmlline.concat, 'title-text-result">(.*?)<', 'gi'), ''), _strFormRegexpMatches, 'gi'), ''), '\s+', '<*>'),
@@ -405,52 +399,92 @@ BEGIN
 														'gi'), ''),
 						'</span>') 
 			as string_regex,
-			htmlline.id,
+			htmlline.id, --2
 			htmlline.concat as htmlsummary
 			from htmlline
-			--where entry.contenu_sans_accent @> 
-			--STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER('pêche récit'), True), '\s+', '<*>', 'gi'), '<*>')
-		), array_regex_replace as (
-			select array_agg(string_regex_replace_list.string_regex) as array_replace, 
+		), array_regex_replace_title as (
+			select array_agg(string_regex_replace_list_title.string_regex) as array_replace, 
 			array_regex_match.array_regex as array_match,
-			string_regex_replace_list.htmlsummary, 
-			string_regex_replace_list.id 
-			from string_regex_replace_list, array_regex_match
-			group by string_regex_replace_list.id, array_regex_match.array_regex, string_regex_replace_list.htmlsummary
-		), general_array as (
+			string_regex_replace_list_title.htmlsummary, 
+			string_regex_replace_list_title.id 
+			from string_regex_replace_list_title, array_regex_match
+			group by string_regex_replace_list_title.id, array_regex_match.array_regex, string_regex_replace_list_title.htmlsummary
+		), general_array_title as (
 			select 
-			--array_regex_replace.array_match,
-			--array_regex_replace.array_replace,
-			array_regex_replace.id,
+			array_regex_replace_title.id,
 			array_to_string(regexp_matches(htmlline.concat, 'title-text-result">(.*?)<', 'gi'), '') as test ,
 			papareo.regexp_remplacechaque(array_to_string(regexp_matches(htmlline.concat, 'title-text-result">(.*?)<', 'gi'), ''), 
-										  array_regex_replace.array_match, 
-										  array_regex_replace.array_replace,
+										  array_regex_replace_title.array_match, 
+										  array_regex_replace_title.array_replace,
 										  'gi') as test1		
 			from htmlline
-			inner join array_regex_replace on array_regex_replace.id = htmlline.id
-			group by array_regex_replace.id, htmlline.concat, array_regex_replace.array_match, array_regex_replace.array_replace
-		), general_agg as (
+			inner join array_regex_replace_title on array_regex_replace_title.id = htmlline.id
+			group by array_regex_replace_title.id, htmlline.concat, array_regex_replace_title.array_match, array_regex_replace_title.array_replace
+		), general_agg_title as (
 			select array_agg(test) as test, array_agg(test1) as test1, id 
-			from general_array
+			from general_array_title
+			group by id
+		), htmlline_title as (
+			SELECT
+			(CASE WHEN papareo.regexp_remplacechaque(htmlline.concat, general_agg_title.test, general_agg_title.test1, 'gi') IS NOT NULL 
+					   THEN papareo.regexp_remplacechaque(htmlline.concat, general_agg_title.test, general_agg_title.test1, 'gi')
+			ELSE htmlline.concat END) as concat,
+			htmlline.id
+			FROM htmlline
+			LEFT JOIN general_agg_title on htmlline.id = general_agg_title.id
+		), string_regex_replace_list_descr as (
+			select concat('<span class="mark-result">',
+						  array_to_string(regexp_matches(CONCAT('<*>',
+																REGEXP_REPLACE(array_to_string(regexp_matches(array_to_string(regexp_matches(htmlline_title.concat, 'description-text-result">(.*?)<', 'gi'), ''), _strFormRegexpMatches, 'gi'), ''), '\s+', '<*>'),
+																'<*>'),
+														'>(.*?)<',
+														'gi'), ''),
+						'</span>') 
+			as string_regex,
+			htmlline_title.id,
+			htmlline_title.concat as htmlsummary
+			from htmlline_title
+		), array_regex_replace_descr as (
+			select array_agg(string_regex_replace_list_descr.string_regex) as array_replace, 
+			array_regex_match.array_regex as array_match,
+			string_regex_replace_list_descr.htmlsummary, 
+			string_regex_replace_list_descr.id 
+			from string_regex_replace_list_descr, array_regex_match
+			group by string_regex_replace_list_descr.id, array_regex_match.array_regex, string_regex_replace_list_descr.htmlsummary
+		), general_array_descr as (
+			select 
+			array_regex_replace_descr.id,
+			array_to_string(regexp_matches(htmlline_title.concat, 'description-text-result">(.*?)<', 'gi'), '') as test ,
+			papareo.regexp_remplacechaque(array_to_string(regexp_matches(htmlline_title.concat, 'description-text-result">(.*?)<', 'gi'), ''), 
+										  array_regex_replace_descr.array_match, 
+										  array_regex_replace_descr.array_replace,
+										  'gi') as test1		
+			from htmlline_title
+			inner join array_regex_replace_descr on array_regex_replace_descr.id = htmlline_title.id
+			group by array_regex_replace_descr.id, htmlline_title.concat, array_regex_replace_descr.array_match, array_regex_replace_descr.array_replace
+		), general_agg_descr as (
+			select array_agg(test) as test, array_agg(test1) as test1, id 
+			from general_array_descr
 			group by id
 		)
 		SELECT 
-		string_agg(papareo.regexp_remplacechaque(htmlline.concat, 
-									  general_agg.test,
-									  general_agg.test1,
-									  'gi'), '')
+		string_agg(
+			(CASE WHEN papareo.regexp_remplacechaque(htmlline_title.concat, general_agg_descr.test, general_agg_descr.test1, 'gi') IS NOT NULL 
+					   THEN papareo.regexp_remplacechaque(htmlline_title.concat, general_agg_descr.test, general_agg_descr.test1, 'gi')
+			ELSE htmlline_title.concat END), '')
 		INTO _strHTMLContent
-		FROM general_agg
-		INNER JOIN htmlline on htmlline.id = general_agg.id;
+		FROM htmlline_title
+		LEFT JOIN general_agg_descr on htmlline_title.id = general_agg_descr.id;
 						
 		_strHTML := FORMAT(_strHTML, _intCount, _charPlural, _charPlural, _strsearchinputtext, _strHTMLContent);
 
 	ELSE
-		_strHTML := _strHTML || 				'<p>Aucun résultat trouvé.</p>';
-		_strHTML := _strHTML || 			'</div>';
-		_strHTML := _strHTML || 		'</div>';
-		_strHTML := _strHTML || 	'</div>';		
+		SELECT CONCAT(_strHTML,
+					'<p>Aucun résultat trouvé.</p>',
+				'</div>',
+			'</div>',
+		'</div>')
+		INTO _strHTML;		
 	END IF;
 
 	RETURN _strHTML;
