@@ -55,7 +55,7 @@
 				<div class="search-form">
 					<form method="POST"> {% module xsrf_form_html() %}
 						<div class="d-flex flex-row align-items-center search-input-container">
-							<input type="text" class="style-input" placeholder="Rechercher..." name="search-input-text">
+							<input type="text" class="style-input" placeholder="Rechercher..." name="search-input-text" value="{% if search_input_text is not None %}{{ search_input_text }}{% end %}">
 							<button type="submit" value="send" class="btn btn-outline-primary btn-lg ms-2 button-width-180" role="button">Recherche</button>
 						</div>
 					</form>

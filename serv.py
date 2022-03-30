@@ -342,7 +342,7 @@ class HomeHandler(BaseHandler):
 
         strHTMLPath = os.path.join(path_html, "home.html")
         
-        self.render(strHTMLPath, path_url=path_url, label_user=label_user, search_results = None)
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user, search_results = None, search_input_text=None)
         
     def post(self):
 
@@ -407,7 +407,7 @@ class HomeHandler(BaseHandler):
 
         strHTMLPath = os.path.join(path_html, "home.html")
         
-        self.render(strHTMLPath, path_url=path_url, label_user=label_user, search_results = html_row)
+        self.render(strHTMLPath, path_url=path_url, label_user=label_user, search_results = html_row, search_input_text=search_input_text)
 
 def checkUserRegisterInformation(dicGeneral):
 

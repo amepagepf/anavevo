@@ -256,7 +256,7 @@ AS $BODY$
 			le 24/03/2022 (AM) Eclatage propre du html, recherche sur la bonne colonne
 			le 25/03/2022 (AM) Construction de toute la structure HTML en une requête correcte, pour resortir uniquement les éléments de la recherche
 			le 29/03/2022 (AM) La recherche plein texte sans ts_vector
-			le 30/03/2022 (AM) Ne rien renvoyer quand la recherche est vide
+			le 30/03/2022 (AM) Ne rien renvoyer quand la recherche est vide + gestion du case insensitive
 	*/
 
 DECLARE 
@@ -386,14 +386,25 @@ BEGIN
 			) as concat,
 			uniquecollection.id
 			FROM uniquecollection
-		), string_regex_match_list as (
+		)/*, string_regex_match_list as (
 			select concat('\y', array_to_string(regexp_matches(CONCAT('<*>', REGEXP_REPLACE(_strsearchinputtext, '\s+', '<*>', 'gi'), '<*>'), '>(.*?)<', 'gi'), ''), '\y') as string_regex
+		)*/, search_to_upper as (
+				SELECT ARRAY_TO_STRING(REGEXP_MATCHES(CONCAT('<*>', REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(_strsearchinputtext), True), '\s+', '<*>', 'gi'), '<*>'), '>(.*?)<', 'gi'), '') as searchinput
+		), string_regex_accent_match_list as (
+			SELECT DISTINCT contenu_accent[array_position(contenu_sans_accent, search_to_upper.searchinput)] as unique_string
+			FROM papareo.entry, search_to_upper
+			WHERE entry.contenu_sans_accent @> 
+			STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(search_to_upper.searchinput), True), '\s+', '<*>', 'gi'), '<*>')
+		), multiplematch as (
+			select string_agg(unique_string, '|') as unique_string from string_regex_accent_match_list
+		), string_regex_match_list as (
+			SELECT CONCAT('\y', unique_string, '\y') as string_regex FROM string_regex_accent_match_list
 		), array_regex_match as (
 			select array_agg(string_regex_match_list.string_regex) as array_regex from string_regex_match_list
 		), string_regex_replace_list_title as (
 			select concat('<span class="mark-result">',
 						  array_to_string(regexp_matches(CONCAT('<*>',
-																REGEXP_REPLACE(array_to_string(regexp_matches(array_to_string(regexp_matches(htmlline.concat, 'title-text-result">(.*?)<', 'gi'), ''), _strFormRegexpMatches, 'gi'), ''), '\s+', '<*>'),
+																REGEXP_REPLACE(array_to_string(regexp_matches(array_to_string(regexp_matches(htmlline.concat, 'title-text-result">(.*?)<', 'gi'), ''), multiplematch.unique_string, 'gi'), ''), '\s+', '<*>'),
 																'<*>'),
 														'>(.*?)<',
 														'gi'), ''),
@@ -401,7 +412,7 @@ BEGIN
 			as string_regex,
 			htmlline.id, --2
 			htmlline.concat as htmlsummary
-			from htmlline
+			from htmlline, multiplematch
 		), array_regex_replace_title as (
 			select array_agg(string_regex_replace_list_title.string_regex) as array_replace, 
 			array_regex_match.array_regex as array_match,
@@ -435,7 +446,7 @@ BEGIN
 		), string_regex_replace_list_descr as (
 			select concat('<span class="mark-result">',
 						  array_to_string(regexp_matches(CONCAT('<*>',
-																REGEXP_REPLACE(array_to_string(regexp_matches(array_to_string(regexp_matches(htmlline_title.concat, 'description-text-result">(.*?)<', 'gi'), ''), _strFormRegexpMatches, 'gi'), ''), '\s+', '<*>'),
+																REGEXP_REPLACE(array_to_string(regexp_matches(array_to_string(regexp_matches(htmlline_title.concat, 'description-text-result">(.*?)<', 'gi'), ''), multiplematch.unique_string, 'gi'), ''), '\s+', '<*>'),
 																'<*>'),
 														'>(.*?)<',
 														'gi'), ''),
@@ -443,7 +454,7 @@ BEGIN
 			as string_regex,
 			htmlline_title.id,
 			htmlline_title.concat as htmlsummary
-			from htmlline_title
+			from htmlline_title, multiplematch
 		), array_regex_replace_descr as (
 			select array_agg(string_regex_replace_list_descr.string_regex) as array_replace, 
 			array_regex_match.array_regex as array_match,
@@ -483,8 +494,19 @@ BEGIN
 					'<p>Aucun résultat trouvé.</p>',
 				'</div>',
 			'</div>',
+			'<div class="search-results">',
+				'<div class="search-results-title">',
+					'<h4>Résultats de la recherche ''%s'':</h4>',
+				'</div>',
+				'<div class="search-results-nocontent">',
+					'<p>Aucun résultat trouvé.</p>',
+				'</div>',
+			'</div>',
 		'</div>')
-		INTO _strHTML;		
+		INTO _strHTML;	
+		
+		_strHTML := FORMAT(_strHTML, _strsearchinputtext);
+		
 	END IF;
 
 	RETURN _strHTML;
@@ -494,3 +516,4 @@ $BODY$;
 
 ALTER FUNCTION papareo.anavevo_search_function(character varying)
     OWNER TO postgres;
+

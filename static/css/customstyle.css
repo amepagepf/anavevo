@@ -264,4 +264,10 @@
 .search-results-content {
 	width: 100%;
 	padding-right: 32px;
+	display: flex;
+	flex-direction: column;
+}
+
+.search-results-nocontent {
+	padding-right: 32px;
 }
