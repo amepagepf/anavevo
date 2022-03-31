@@ -21,13 +21,6 @@ from tornado.options import define, options
 
 # Define options
 define("port", default=8888, help="run on the given port", type=int)
-# BDD Configuration
-define("pgsql_host", default="127.0.0.1", help="database host")
-define("pgsql_port", default="5432", help="database port")
-#define("pgsql_database", default="anavevo_recette", help="database name")
-define("pgsql_database", default="anavevodb", help="database name")
-define("pgsql_user", default="postgres", help="database user")
-define("pgsql_password", default="root", help="database password")
 
 # Define path to library directory
 #path_data = "data/"

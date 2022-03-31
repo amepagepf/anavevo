@@ -61,85 +61,7 @@ $BODY$;
 ALTER FUNCTION papareo.anavevo_jsonfy_function(character varying)
     OWNER TO postgres;
 
--- Function to search element
--- FUNCTION: papareo.anavevo_search_function(character varying)
 
--- DROP FUNCTION IF EXISTS papareo.anavevo_search_function(character varying);
-
-CREATE OR REPLACE FUNCTION papareo.anavevo_search_function(
-	_strsearchinputtext character varying)
-    RETURNS character varying
-    LANGUAGE 'plpgsql'
-    COST 100
-    IMMUTABLE STRICT PARALLEL UNSAFE
-AS $BODY$
-	/*	Fonction anavevo_search_function: renvoie le HTML des résultats de la recherche saisie par l'utilisateur
-		Versions:
-			le 22/02/2022 (AM) Création
-			le 28/02/2022 (AM) Revue avec Hugues + gestion du tahitien
-	*/
-
-DECLARE 
-
-	_strHTML VARCHAR := '';
-	_strHTMLContent VARCHAR;
-	_charPlural CHAR(1);
-	_intCount INTEGER := 0;
-
-BEGIN
-
-	_strHTML := _strHTML || '<div class="search-results-container">';
-	_strHTML := _strHTML || 		'<div class="search-summary">';
-	_strHTML := _strHTML || 			'<div class="search-summary-title">';
-	_strHTML := _strHTML || 				'<h4>Nombre de résultats:</h4>';
-	_strHTML := _strHTML || 			'</div>';
-	_strHTML := _strHTML || 			'<div class="search-summary-results">';
-
-	SELECT COUNT(*) INTO _intCount
-	FROM papareo.entree
- 	WHERE to_tsvector('french', html) || to_tsvector('french', html)
-	@@ to_tsquery('french', regexp_replace(_strsearchinputtext, '\s+', ' & ', 'gi'));
-	
-	IF _intCount > 0 THEN
-	
-		IF _intCount > 1 THEN
-			_charPlural := 's';
-		END IF;
-		
-		_strHTML := _strHTML || 				'<p>%s résultat%s trouvé%s.</p>';
-		_strHTML := _strHTML ||			'</div>';
-		_strHTML := _strHTML ||		'</div>';
-		_strHTML := _strHTML || 		'<div class="search-results">';
-		_strHTML := _strHTML || 			'<div class="search-results-title">';
-		_strHTML := _strHTML ||				'<h4>Résultats de la recherche:</h4>';
-		_strHTML := _strHTML || 			'</div>';
-		_strHTML := _strHTML ||			'<div class="search-results-content">';
-		_strHTML := _strHTML || 				'%s';
-		_strHTML := _strHTML ||			'</div>';
-		_strHTML := _strHTML || 		'</div>';
-		_strHTML := _strHTML || 	'</div>';
-		
-		SELECT string_agg(html, '<br>') into _strHTMLContent
-		FROM papareo.entree
-		WHERE to_tsvector('french', html)
-		@@ to_tsquery('french', regexp_replace(_strsearchinputtext, '\s+', ' & ', 'gi'));
-
-		_strHTML := FORMAT(_strHTML, _intCount, _charPlural, _charPlural, _strHTMLContent);
-
-	ELSE
-		_strHTML := _strHTML || 				'<p>Aucun résultat trouvé.</p>';
-		_strHTML := _strHTML || 			'</div>';
-		_strHTML := _strHTML || 		'</div>';
-		_strHTML := _strHTML || 	'</div>';		
-	END IF;
-	
-	RETURN _strHTML;
-	
-END;
-$BODY$;
-
-ALTER FUNCTION papareo.anavevo_search_function(character varying)
-    OWNER TO postgres;
 
 -- Table qui stocke les index de recherche
 CREATE TABLE papareo.entry(
@@ -162,22 +84,20 @@ INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, co
 	collection.id,
 	NULL,
 	CAST (NULL AS INTEGER),
-	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(TRIM(CONCAT(collection.title, ' ', collection.description))), '\s+', '<*>', 'gi'), '<*>') as contenu_accent,
-	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(TRIM(CONCAT(collection.title, ' ', collection.description))), True), '\s+', '<*>', 'gi'), '<*>') as contenu_sans_accent,
+	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(TRIM(CONCAT(collection.title, ' ', collection.description))), '[\s+\-]', '<*>', 'gi'), '<*>') as contenu_accent,
+	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(TRIM(CONCAT(collection.title, ' ', collection.description))), True), '[\s+\-]', '<*>', 'gi'), '<*>') as contenu_sans_accent,
 	concat('<a href="http://localhost:8888/library/', 
 		   CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
 		   '.col" ',
 		   ' class="btn btn-outline-primary btn-lg m-3" role="button">',
 		   CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
 		   '</a>'),
-	concat('<div class="text-result-summary">',
-		   '<p class="title-text-result">',
+	concat('<p class="title-text-result">',
 		   collection.title,
 		   '</p>',
 		   '<p class="description-text-result">',
 		   collection.description,
-		   '</p>',
-		   '</div>'
+		   '</p>'
 	)
 	FROM papareo.collection
 	WHERE collection.id IS NOT NULL)
@@ -188,8 +108,8 @@ INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, co
 	collection.id,
 	item.id,
 	CAST(NULL AS INTEGER),
-	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(TRIM(CONCAT(item.title, ' ', item.description))), '\s+', '<*>', 'gi'), '<*>') as contenu_accent,
-	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(TRIM(CONCAT(item.title, ' ', item.description))), True), '\s+', '<*>', 'gi'), '<*>') as contenu_sans_accent,
+	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(TRIM(CONCAT(item.title, ' ', item.description))), '[\s+\-]', '<*>', 'gi'), '<*>') as contenu_accent,
+	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(TRIM(CONCAT(item.title, ' ', item.description))), True), '[\s+\-]', '<*>', 'gi'), '<*>') as contenu_sans_accent,
 	concat('<a href="http://localhost:8888/library/', 
 	CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
 	'/', 
@@ -198,14 +118,12 @@ INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, co
 	' class="btn btn-outline-primary btn-lg m-3" role="button">',
 	CASE WHEN item.identifier IS NOT NULL THEN concat(CAST(item.id AS TEXT), '-', item.identifier) ELSE concat(CAST(item.id AS TEXT)) END,
 	'</a>'),
-	concat('<div class="text-result-summary">',
-		   '<p class="title-text-result">',
+	concat('<p class="title-text-result">',
 		   item.title,
 		   '</p>',
 		   '<p class="description-text-result">',
 		   item.description,
-		   '</p>',
-		   '</div>'
+		   '</p>'
 	)
 	FROM papareo.collection
 	INNER JOIN papareo.item on collection.id = item.collection_id
@@ -304,188 +222,204 @@ BEGIN
 		'</div>')
 		INTO _strHTML;
 		
-		select REGEXP_REPLACE(_strsearchinputtext, '\s+', '|', 'gi') into _strFormRegexpMatches;
 		-- Requête pour constuire le HTML des résultats issus de la recherche
-		with elementresults as (
-			SELECT DISTINCT entry.htmllink, entry.htmlsummary, entry.id_collection, entry.id_item, entry.id_essence, entry.id, entry.contenu_sans_accent
-			FROM papareo.entry
+		with table_searchinput as (
+			-- Décompose les mots de la recherche en ligne de mots
+			SELECT ARRAY_TO_STRING(REGEXP_MATCHES(CONCAT('<*>', REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(_strsearchinputtext), True), '\s+', '<*>', 'gi'), '<*>'), '>(.*?)<', 'gi'), '') as row_searchinput
+		), table_searchinput_upper as (
+			-- Récupération des valeurs avec accents des mots de la recherche depuis la colonne contenu_sans_accent et contenu_accente
+			SELECT DISTINCT contenu_accent[array_position(contenu_sans_accent, table_searchinput.row_searchinput)] as row_searchinput_upper
+			FROM papareo.entry, table_searchinput
 			WHERE entry.contenu_sans_accent @> 
+			STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(table_searchinput.row_searchinput), True), '\s+', '<*>', 'gi'), '<*>')
+		), regexpmatch_searchinput as (
+			-- Création du string pour le match du regex_match avec la séparation des mots
+			select string_agg(table_searchinput_upper.row_searchinput_upper, '|') as regexpmatch_searchinput
+			from table_searchinput_upper
+		), table_searchinput_upper_regex as (
+			-- Rajout de la recherche par mot exact sur la regex d'un mot
+			SELECT CONCAT('\y', table_searchinput_upper.row_searchinput_upper, '\y') as row_searchinput_upper_regex
+			FROM table_searchinput_upper
+		), array_regex_match as (
+			-- Mettre les mots regex dans un array pour le matching
+			select array_agg(table_searchinput_upper_regex.row_searchinput_upper_regex) as array_regex from table_searchinput_upper_regex	
+		), table_content_balise as (
+			-- Récupération du contenu dans chaque balise <p>
+			SELECT 
+			id,
+			entry.htmlsummary,
+			array_to_string(regexp_matches(entry.htmlsummary, '">(.*?)</p', 'gi'), '') as htmlsummarymatch
+			from papareo.entry
+			where entry.contenu_sans_accent @> 
 			STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(_strsearchinputtext), True), '\s+', '<*>', 'gi'), '<*>')
-		), uniquecollection as (
-			SELECT DISTINCT entry.htmllink, entry.htmlsummary, entry.id_collection, entry.id
+		), table_content_balise_notempty as (
+			-- Filtre pour n'avoir que les éléments non vide (pas de '' ou null)
+			SELECT 
+			id,
+			htmlsummary,
+			htmlsummarymatch, 
+			concat('<span class="mark-result">',
+					array_to_string(regexp_matches(CONCAT('<*>', regexp_replace(array_to_string(regexp_matches(htmlsummarymatch, regexpmatch_searchinput.regexpmatch_searchinput, 'gi'), ''), '\s+', '<*>'), '<*>'),
+													'>(.*?)<',
+													'gi'), '') ,
+				   '</span>') as word_regex
+			FROM table_content_balise, regexpmatch_searchinput
+			WHERE htmlsummarymatch != ''
+			AND htmlsummarymatch IS NOT NULL
+		), array_regex_replace_word as (
+			-- Création d'un array pour le remplacement des mots de chaque contenu de balise <p> spécifique par id
+			select table_content_balise_notempty.id,
+			table_content_balise_notempty.htmlsummary,
+			table_content_balise_notempty.htmlsummarymatch,
+			array_regex_match.array_regex as array_match,
+			array_agg(table_content_balise_notempty.word_regex) as array_replace		
+			from table_content_balise_notempty, array_regex_match
+			group by table_content_balise_notempty.id, array_regex_match.array_regex, table_content_balise_notempty.htmlsummary, table_content_balise_notempty.htmlsummarymatch
+		), table_replace_word as (
+			-- Remplacement de chaque mot matché par une balise mark avec la bonne valeur du mot avant remplacement
+			select
+			array_regex_replace_word.id,
+			array_regex_replace_word.htmlsummary,
+			array_regex_replace_word.htmlsummarymatch,
+			papareo.regexp_remplacechaque(array_regex_replace_word.htmlsummarymatch, 
+										  array_regex_replace_word.array_match, 
+										  array_regex_replace_word.array_replace,
+										  'gi') as htmlsummaryreplace
+			from array_regex_replace_word							  
+		), array_regex_replace_balise as (
+			-- On transforme les contenus des balises en array et le remplacement du contenu de la balise avec les balises mark pour chaque mot groupé par id
+			SELECT 
+			table_replace_word.id,
+			table_replace_word.htmlsummary,
+			array_agg(table_replace_word.htmlsummarymatch) as array_match,
+			array_agg(table_replace_word.htmlsummaryreplace) as array_replace
+			FROM table_replace_word
+			GROUP BY table_replace_word.id, table_replace_word.htmlsummary
+		), table_replace_balise as (
+			-- On remplace chaque contenu de balise par le contenu avec le mark des mots dans le champ html général
+			SELECT 
+			array_regex_replace_balise.id,
+			array_regex_replace_balise.htmlsummary,
+			papareo.regexp_remplacechaque(array_regex_replace_balise.htmlsummary, 
+										  array_regex_replace_balise.array_match, 
+										  array_regex_replace_balise.array_replace,
+										  'gi') as htmlsummaryreplaced
+			FROM array_regex_replace_balise								
+		), elementresults as (
+			-- On récupère toutes les informations sur le champ htmlreplace précédemment
+			SELECT DISTINCT table_replace_balise.htmlsummaryreplaced, entry.id, entry.htmllink, entry.id_collection, entry.id_item, entry.id_essence
 			FROM papareo.entry
-			INNER JOIN elementresults ON elementresults.id_collection = papareo.entry.id_collection
+			INNER JOIN table_replace_balise ON table_replace_balise.id = entry.id
+		), uniquecollection as (
+			-- On récupère la collection associée à elementsresults
+			SELECT DISTINCT entry.htmllink, elementresults.htmlsummaryreplaced, entry.htmlsummary, entry.id_collection, entry.id_item, entry.id_essence, entry.id
+			FROM papareo.entry
+			LEFT JOIN elementresults ON elementresults.id_collection = entry.id_collection
+			AND entry.id = elementresults.id
 			WHERE entry.htmllink IS NOT NULL
 			AND entry.id_collection IS NOT NULL
 			AND entry.id_item IS NULL
 			AND entry.id_essence IS NULL
+			AND entry.id_collection IN (SELECT DISTINCT elementresults.id_collection FROM elementresults)	
 		), uniqueitem as (
-			SELECT DISTINCT entry.htmllink, entry.htmlsummary, entry.id_collection, entry.id_item, entry.id_essence
+			-- On récupère l'item associée à elementsresults
+			SELECT DISTINCT entry.htmllink, elementresults.htmlsummaryreplaced, entry.htmlsummary, entry.id_collection, entry.id_item, entry.id_essence, entry.id
 			FROM papareo.entry
-			INNER JOIN elementresults ON elementresults.id_collection = entry.id_collection AND elementresults.id_item = entry.id_item
+			LEFT JOIN elementresults ON elementresults.id_collection = entry.id_collection
+			AND elementresults.id_item = entry.id_item
+			AND elementresults.id = entry.id
 			WHERE entry.htmllink IS NOT NULL
 			AND entry.id_collection IS NOT NULL
 			AND entry.id_item IS NOT NULL
 			AND entry.id_essence IS NULL
+			AND entry.id_item IN (SELECT DISTINCT elementresults.id_item FROM elementresults)
 		), uniqueessence as (
-			SELECT DISTINCT entry.htmllink, entry.id_item, entry.id_essence
+			-- On récupère l'essence associée à elementsresults
+			SELECT DISTINCT entry.htmllink, elementresults.htmlsummaryreplaced, entry.htmlsummary, entry.id, entry.id_collection, entry.id_item, entry.id_essence
 			FROM papareo.entry
-			INNER JOIN elementresults ON entry.id_collection = elementresults.id_collection AND entry.id_item = elementresults.id_item
-			AND entry.htmllink IS NOT NULL
+			LEFT JOIN elementresults ON entry.id_collection = elementresults.id_collection 
+			AND entry.id_item = elementresults.id_item
+			AND entry.id_essence = elementresults.id_essence
+			AND elementresults.id = entry.id
+			WHERE entry.htmllink IS NOT NULL
 			AND entry.id_collection IS NOT NULL
 			AND entry.id_item IS NOT NULL
 			AND entry.id_essence IS NOT NULL
-		), htmlline as (
-			SELECT
-			concat('<tr>',
-						'<td>',
-							'<ul class="arbo-direction-column">',
-								'<div class="collection-container">',
-									'<div class="collection-navigation">', 
-										'<div class="arrow-down" onclick="showSearchArborescence(this)"></div>',
-										uniquecollection.htmllink,
-									'</div>',
-									uniquecollection.htmlsummary,
-									(SELECT 
-									string_agg(concat('<ul>', 
-														'<div class="item-container-show">',
-																'<div class="item-navigation">', 
-																	CASE WHEN (SELECT string_agg(uniqueessence.htmllink, '') 
-																			FROM uniqueessence
-																			WHERE uniqueessence.id_item = uniqueitem.id_item
-																			AND uniqueessence.id_essence IS NOT NULL
-																			GROUP BY uniqueessence.id_item
-																			) IS NOT NULL THEN
-																	'<div class="arrow-right" onclick="showSearchArborescence(this)"></div>'
-																	ELSE 
-																	'<div class="no-arrow"></div>'
-																	END,
-																	uniqueitem.htmllink,
-																'</div>',
-																uniqueitem.htmlsummary,
-																(SELECT string_agg(uniqueessence.htmllink, '') 
-																FROM uniqueessence
-																WHERE uniqueessence.id_item = uniqueitem.id_item
-																AND uniqueessence.id_essence IS NOT NULL
-																GROUP BY uniqueessence.id_item
-																),
-														'</div>',
-													'</ul>'
-									), '')
-									FROM uniqueitem
-									WHERE uniqueitem.id_collection = uniquecollection.id_collection
-									AND uniqueitem.id_collection IS NOT NULL
-									AND uniqueitem.id_item IS NOT NULL
-									AND uniqueitem.id_essence IS NULL
-									GROUP BY uniqueitem.id_collection
-									),
-								'</div>',
-							'</ul>',
-						'</td>',
-					'</tr>'
-			) as concat,
-			uniquecollection.id
-			FROM uniquecollection
-		)/*, string_regex_match_list as (
-			select concat('\y', array_to_string(regexp_matches(CONCAT('<*>', REGEXP_REPLACE(_strsearchinputtext, '\s+', '<*>', 'gi'), '<*>'), '>(.*?)<', 'gi'), ''), '\y') as string_regex
-		)*/, search_to_upper as (
-				SELECT ARRAY_TO_STRING(REGEXP_MATCHES(CONCAT('<*>', REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(_strsearchinputtext), True), '\s+', '<*>', 'gi'), '<*>'), '>(.*?)<', 'gi'), '') as searchinput
-		), string_regex_accent_match_list as (
-			SELECT DISTINCT contenu_accent[array_position(contenu_sans_accent, search_to_upper.searchinput)] as unique_string
-			FROM papareo.entry, search_to_upper
-			WHERE entry.contenu_sans_accent @> 
-			STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(search_to_upper.searchinput), True), '\s+', '<*>', 'gi'), '<*>')
-		), multiplematch as (
-			select string_agg(unique_string, '|') as unique_string from string_regex_accent_match_list
-		), string_regex_match_list as (
-			SELECT CONCAT('\y', unique_string, '\y') as string_regex FROM string_regex_accent_match_list
-		), array_regex_match as (
-			select array_agg(string_regex_match_list.string_regex) as array_regex from string_regex_match_list
-		), string_regex_replace_list_title as (
-			select concat('<span class="mark-result">',
-						  array_to_string(regexp_matches(CONCAT('<*>',
-																REGEXP_REPLACE(array_to_string(regexp_matches(array_to_string(regexp_matches(htmlline.concat, 'title-text-result">(.*?)<', 'gi'), ''), multiplematch.unique_string, 'gi'), ''), '\s+', '<*>'),
-																'<*>'),
-														'>(.*?)<',
-														'gi'), ''),
-						'</span>') 
-			as string_regex,
-			htmlline.id, --2
-			htmlline.concat as htmlsummary
-			from htmlline, multiplematch
-		), array_regex_replace_title as (
-			select array_agg(string_regex_replace_list_title.string_regex) as array_replace, 
-			array_regex_match.array_regex as array_match,
-			string_regex_replace_list_title.htmlsummary, 
-			string_regex_replace_list_title.id 
-			from string_regex_replace_list_title, array_regex_match
-			group by string_regex_replace_list_title.id, array_regex_match.array_regex, string_regex_replace_list_title.htmlsummary
-		), general_array_title as (
-			select 
-			array_regex_replace_title.id,
-			array_to_string(regexp_matches(htmlline.concat, 'title-text-result">(.*?)<', 'gi'), '') as test ,
-			papareo.regexp_remplacechaque(array_to_string(regexp_matches(htmlline.concat, 'title-text-result">(.*?)<', 'gi'), ''), 
-										  array_regex_replace_title.array_match, 
-										  array_regex_replace_title.array_replace,
-										  'gi') as test1		
-			from htmlline
-			inner join array_regex_replace_title on array_regex_replace_title.id = htmlline.id
-			group by array_regex_replace_title.id, htmlline.concat, array_regex_replace_title.array_match, array_regex_replace_title.array_replace
-		), general_agg_title as (
-			select array_agg(test) as test, array_agg(test1) as test1, id 
-			from general_array_title
-			group by id
-		), htmlline_title as (
-			SELECT
-			(CASE WHEN papareo.regexp_remplacechaque(htmlline.concat, general_agg_title.test, general_agg_title.test1, 'gi') IS NOT NULL 
-					   THEN papareo.regexp_remplacechaque(htmlline.concat, general_agg_title.test, general_agg_title.test1, 'gi')
-			ELSE htmlline.concat END) as concat,
-			htmlline.id
-			FROM htmlline
-			LEFT JOIN general_agg_title on htmlline.id = general_agg_title.id
-		), string_regex_replace_list_descr as (
-			select concat('<span class="mark-result">',
-						  array_to_string(regexp_matches(CONCAT('<*>',
-																REGEXP_REPLACE(array_to_string(regexp_matches(array_to_string(regexp_matches(htmlline_title.concat, 'description-text-result">(.*?)<', 'gi'), ''), multiplematch.unique_string, 'gi'), ''), '\s+', '<*>'),
-																'<*>'),
-														'>(.*?)<',
-														'gi'), ''),
-						'</span>') 
-			as string_regex,
-			htmlline_title.id,
-			htmlline_title.concat as htmlsummary
-			from htmlline_title, multiplematch
-		), array_regex_replace_descr as (
-			select array_agg(string_regex_replace_list_descr.string_regex) as array_replace, 
-			array_regex_match.array_regex as array_match,
-			string_regex_replace_list_descr.htmlsummary, 
-			string_regex_replace_list_descr.id 
-			from string_regex_replace_list_descr, array_regex_match
-			group by string_regex_replace_list_descr.id, array_regex_match.array_regex, string_regex_replace_list_descr.htmlsummary
-		), general_array_descr as (
-			select 
-			array_regex_replace_descr.id,
-			array_to_string(regexp_matches(htmlline_title.concat, 'description-text-result">(.*?)<', 'gi'), '') as test ,
-			papareo.regexp_remplacechaque(array_to_string(regexp_matches(htmlline_title.concat, 'description-text-result">(.*?)<', 'gi'), ''), 
-										  array_regex_replace_descr.array_match, 
-										  array_regex_replace_descr.array_replace,
-										  'gi') as test1		
-			from htmlline_title
-			inner join array_regex_replace_descr on array_regex_replace_descr.id = htmlline_title.id
-			group by array_regex_replace_descr.id, htmlline_title.concat, array_regex_replace_descr.array_match, array_regex_replace_descr.array_replace
-		), general_agg_descr as (
-			select array_agg(test) as test, array_agg(test1) as test1, id 
-			from general_array_descr
-			group by id
 		)
-		SELECT 
-		string_agg(
-			(CASE WHEN papareo.regexp_remplacechaque(htmlline_title.concat, general_agg_descr.test, general_agg_descr.test1, 'gi') IS NOT NULL 
-					   THEN papareo.regexp_remplacechaque(htmlline_title.concat, general_agg_descr.test, general_agg_descr.test1, 'gi')
-			ELSE htmlline_title.concat END), '')
+		-- On construit tout le HTML en une traite
+		SELECT
+		string_agg(concat('<tr>',
+					'<td>',
+						'<ul class="arbo-direction-column">',
+							'<div class="collection-container">',
+								'<div class="collection-navigation">', 
+									CASE WHEN (SELECT string_agg(uniqueitem.htmllink, '')
+											   FROM uniqueitem
+											   WHERE uniqueitem.id_collection = uniquecollection.id_collection
+											   AND uniqueitem.id_item IS NOT NULL
+											   GROUP BY uniqueitem.id_collection
+											  ) IS NOT NULL THEN
+									'<div class="arrow-down" onclick="showSearchArborescence(this)"></div>'
+									ELSE 
+									'<div class="no-arrow"></div>'
+									END,
+									uniquecollection.htmllink,
+								'</div>',
+								CASE WHEN uniquecollection.htmlsummaryreplaced IS NOT NULL
+								THEN concat('<div class="text-result-summary">',
+											uniquecollection.htmlsummaryreplaced,
+											'</div>')
+								ELSE concat('<div class="text-result-summary">',
+											uniquecollection.htmlsummary,
+											'</div>') END,
+
+								(SELECT 
+								string_agg(concat('<ul>', 
+													'<div class="item-container-show">',
+															'<div class="item-navigation">',
+																CASE WHEN (SELECT string_agg(uniqueessence.htmllink, '') 
+																		FROM uniqueessence
+																		WHERE uniqueessence.id_item = uniqueitem.id_item
+																		AND uniqueessence.id_essence IS NOT NULL
+																		GROUP BY uniqueessence.id_item
+																		) IS NOT NULL THEN
+																'<div class="arrow-right" onclick="showSearchArborescence(this)"></div>'
+																ELSE 
+																'<div class="no-arrow"></div>'
+																END,
+																uniqueitem.htmllink,
+															'</div>',
+															CASE WHEN uniqueitem.htmlsummaryreplaced IS NOT NULL
+															THEN concat('<div class="text-result-summary">',
+																		uniqueitem.htmlsummaryreplaced,
+																		'</div>')
+															ELSE concat('<div class="text-result-summary">',
+																		uniqueitem.htmlsummary,
+																		'</div>')
+															END,
+															(SELECT string_agg(uniqueessence.htmllink, '') 
+															FROM uniqueessence
+															WHERE uniqueessence.id_item = uniqueitem.id_item
+															AND uniqueessence.id_essence IS NOT NULL
+															GROUP BY uniqueessence.id_item
+															),
+													'</div>',
+												 '</ul>')
+								, '')
+								FROM uniqueitem
+								WHERE uniqueitem.id_collection = uniquecollection.id_collection
+								AND uniqueitem.id_collection IS NOT NULL
+								AND uniqueitem.id_item IS NOT NULL
+								AND uniqueitem.id_essence IS NULL
+								GROUP BY uniqueitem.id_collection
+								),
+							'</div>',
+						'</ul>',
+					'</td>',
+			  '</tr>'), '')
 		INTO _strHTMLContent
-		FROM htmlline_title
-		LEFT JOIN general_agg_descr on htmlline_title.id = general_agg_descr.id;
+		FROM uniquecollection
+		;
 						
 		_strHTML := FORMAT(_strHTML, _intCount, _charPlural, _charPlural, _strsearchinputtext, _strHTMLContent);
 
@@ -516,4 +450,3 @@ $BODY$;
 
 ALTER FUNCTION papareo.anavevo_search_function(character varying)
     OWNER TO postgres;
-
