@@ -55,16 +55,8 @@
 					<div class="d-flex flex-column mt-3 element-container">
 						<div class="d-flex flex-column align-items-start input-container">
 							<label for="username-input">Identifiant : </label>
-							<input id="username-input" class="{% if dicError is not None and dicError['username-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="text" placeholder="Email" name="username" value="{% if username is not None %}{{ username }}{% end %}" required>
+							<input id="username-input" class="{% if dicError is not None and dicError['password-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="text" placeholder="Email" name="username" value="{% if username is not None %}{{ username }}{% end %}" required>
 						</div>								
-						<div class="error-list"> 
-							{% if dicError is not None and dicError["username-errors"] is not None %}
-							<div class="message-errors">
-								<i class="fa-solid fa-circle-exclamation error-icon"></i> 
-								<span class="mb-1">{{ dicError["username-errors"] }}</span> 
-							</div>
-							{% end %}
-						</div>
 					</div>
 					<div class="d-flex flex-column mt-3 element-container">
 						<div class="d-flex flex-column align-items-start input-container">

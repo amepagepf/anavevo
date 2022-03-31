@@ -129,6 +129,7 @@
 
 .input-container {
 	width: 100%;
+	max-width: 450px;
 }
 
 /*.password-input-container {
@@ -139,6 +140,8 @@
 	height: 10px;
 	max-height: 10px;
 	color: #d93025;
+	max-width: 450px;
+	width: 100%;
 }
 
 .form-login-container {
@@ -148,8 +151,8 @@
 	align-items: center;
 }
 .element-container {
-	max-width: 300px;
 	width: 100%;
+	align-items: center;
 }
 
 .form-login-container > div:nth-last-of-type(2){

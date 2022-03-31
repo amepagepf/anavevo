@@ -5,6 +5,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.options
 import psycopg2
+from configparser import ConfigParser
 import re
 import os
 import hashlib
@@ -41,9 +42,15 @@ path_url = "http://localhost:8888"
 #path_static = "static/"
 path_static = "C:/Projets/anavevo/static/"
 
-# Defini the html path for html files
+# Define the html path for html files
 #path_html = "html/"
 path_html = "C:/Projets/anavevo/html/"
+
+#Define the conf path for config files
+path_dbconfig = "C:/Projets/anavevo/conf/"
+#path_dbconfig = "conf/"
+configdb_filename = "database.conf"
+path_dbconfig = os.path.join(path_dbconfig, configdb_filename)
 
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
@@ -352,25 +359,22 @@ class HomeHandler(BaseHandler):
             label_user = getLabelUserFromCurrentCookie(self)
         
         search_input_text = self.get_argument("search-input-text")
-
+        
         try:
-            connection = psycopg2.connect(
-                database = options.pgsql_database,
-                user = options.pgsql_user,
-                password = options.pgsql_password,
-                host = options.pgsql_host,
-                port = options.pgsql_port)
+            connection = setConnection()
             
             connection.set_session(readonly=True)
             
             cursor = connection.cursor()
 
+            displayDatabaseInformation(cursor)
+            
             sql_query = """SELECT papareo.ANAVEVO_SEARCH_FUNCTION(%s);"""
 
             cursor.execute(sql_query, (search_input_text,))
 
             html_row = cursor.fetchone()[0]
-            print(html_row)
+            #print(html_row)
             
             sql_query = """SELECT papareo.ANAVEVO_JSONFY_FUNCTION(%s);"""
             
@@ -408,6 +412,46 @@ class HomeHandler(BaseHandler):
         strHTMLPath = os.path.join(path_html, "home.html")
         
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, search_results = html_row, search_input_text=search_input_text)
+
+def setConnection():
+    # Connect to the postgreSQL database server
+    
+    connection = None
+
+    params = getConfigDictionnaryFromConfigFile(path_dbconfig, "postgresql")
+    
+    print('Connecting to the PostgreSQL database...')
+    connection = psycopg2.connect(**params)
+            
+    return connection
+
+def displayDatabaseInformation(cursor):
+
+        # execute a statement
+        print('PostgreSQL database version:')
+        cursor.execute('SELECT version()')
+
+        # display the PostgreSQL database server version
+        db_version = cursor.fetchone()
+        print(db_version)
+        
+def getConfigDictionnaryFromConfigFile(fileName, section):
+    #Create a parser
+    parser = ConfigParser()
+    
+    parser.read(fileName)
+
+    dicDB = {}
+    
+    if parser.has_section(section):
+        params = parser.items(section)
+        for param in params:
+            dicDB[param[0]] = param[1]
+    
+    else:
+        raise Exception('Section {0} not found in the {1} file'.format(section, fileName))
+    
+    return dicDB
 
 def checkUserRegisterInformation(dicGeneral):
 
@@ -458,19 +502,14 @@ def checkUserRegisterInformation(dicGeneral):
         print("password not identical")
         dicError["confirmpassword-errors"] = "Le mot de passe n'est pas identique."
         booUserInformationHasError = True
-    
-    connection = psycopg2.connect(
-        database = options.pgsql_database,
-        user = options.pgsql_user,
-        password = options.pgsql_password,
-        host = options.pgsql_host,
-        port = options.pgsql_port)
-    
-    connection.set_session(readonly=True)
-    
+        
     try :
-        cursor = connection.cursor()
     
+        connection = setConnection()
+        connection.set_session(readonly=True)
+        cursor = connection.cursor()
+        displayDatabaseInformation(cursor)
+        
         sql_query = "SELECT COUNT(*) FROM papareo.user WHERE username = %s"
         
         cursor.execute(sql_query, (username,))
@@ -520,127 +559,100 @@ def setHashedPassword(dicGeneral):
     # Encode in base64 the hash password and convert it to a string               
     encode_password_64 = base64.b64encode(storage_password).decode('ascii')
 
-    connection_user = psycopg2.connect(
-        database = options.pgsql_database,
-        user = options.pgsql_user,
-        password = options.pgsql_password,
-        host = options.pgsql_host,
-        port = options.pgsql_port)
-
     try:
-        cursor_user = connection_user.cursor()
-    
+        connection = setConnection()
+        cursor = connection_user.cursor()
+        displayDatabaseInformation(cursor)
+        
         sql_query = "INSERT INTO papareo.user(username, password, firstname, lastname, date_creation, date_creation_timestamp, private_access) "
         sql_query += "VALUES (%s, %s, %s, %s, %s, %s, %s) "
 
         datetime_jour = datetime.now()
         
-        cursor_user.execute(sql_query, (username, encode_password_64, firstname, lastname, datetime_jour, datetime_jour, 'True'))
+        cursor.execute(sql_query, (username, encode_password_64, firstname, lastname, datetime_jour, datetime_jour, 'True'))
 
-        connection_user.commit()
+        connection.commit()
     
     except psycopg2.Error as e:
         print("Failed to insert record from PostGre table: {}".format(e))
 
     finally:
-        if connection_user:
-            cursor_user.close()
-            connection_user.close()
+        if connection:
+            cursor.close()
+            connection.close()
             print("PostGre connection_user is closed")
     
 def checkUserLoginConnexion(dicGeneral):
 
-    connection = psycopg2.connect(
-            database = options.pgsql_database,
-            user = options.pgsql_user,
-            password = options.pgsql_password,
-            host = options.pgsql_host,
-            port = options.pgsql_port)
-        
-    connection.set_session(readonly=True)
-
     dicSession = {}
     
     try :
+    
+        connection = setConnection()
+        connection.set_session(readonly=True)
         cursor = connection.cursor()
-
-        sql_query = "SELECT COUNT(*) FROM papareo.user WHERE username = %s"
-
+        displayDatabaseInformation(cursor)
+        
         # Encodage + hash username à faire ?
         dicUser = dicGeneral["dicUser"]
         username = dicUser["username"]
         
-        cursor.execute(sql_query, (username,))
-
-        int_count = cursor.fetchone()[0]
-
-        booCheckUsernameExist = False
         booCheckPasswordCorrect = False
         booCheckMoreUsers = False
         
         dicError = dicGeneral["dicError"]
+
+        sql_query = "SELECT id, password, firstname, lastname FROM papareo.user WHERE username = %s "
+
+        # Encodage ou hash password à faire
+        password = dicUser["password"]
         
-        if int_count == 0 :
-            dicError["username-errors"] = "L'identifiant saisi n'existe pas."
-        elif int_count == 1 :
-            print("utilisateur trouve")
-            booCheckUsernameExist = True
-        else :
-            dicError["username-errors"] = "L'identifiant saisi existe en plusieurs fois, merci de contacter le support."
+        cursor.execute(sql_query, (username,))
 
-        if booCheckUsernameExist == True :
-            sql_query = "SELECT id, password, firstname, lastname FROM papareo.user WHERE username = %s "
-
-            # Encodage ou hash password à faire
-            password = dicUser["password"]
-            
-            cursor.execute(sql_query, (username,))
-
-            int_count = cursor.rowcount
-            
-            if int_count > 1 :
-                booCheckMoreUsers = True
-                print("plusieurs utilisateurs trouves, erreur")
-                dicError["password-errors"] = "Plusieurs utilisateurs trouvés, merci de contacter le support."
-            
-            if booCheckMoreUsers == False :
-            
-                row = cursor.fetchone()
-                userid_bdd = row[0]
-                encode_password_64 = row[1]
-                firstname_bdd = row[2]
-                lastname_bdd = row[3]
-                
-                # Retrieve password
-                # Decode the BDD password in bytes
-                decode_password_64 = base64.b64decode(encode_password_64.encode('ascii'))
-                
-                # Get the salt from BDD password, 32 is the length of the salt
-                salt_from_storage = decode_password_64[:32] 
-                
-                # Get the key from BDD password
-                key_from_storage = decode_password_64[32:]
-
-                # Generate hash from password user gives in login, with the salt value from BDD password
-                key_password_tocheck = hashlib.pbkdf2_hmac('sha256', password.encode('UTF-8'), salt_from_storage, 100000)                
-
-                # Compare the two keys, if identical, password is correct
-                if key_from_storage == key_password_tocheck :
-                    print("password correct")
-                    booCheckPasswordCorrect = True
-                else :
-                    print("password incorrect")
-                    dicError["password-errors"] = "Le mot de passe est incorrect."
-                
-                if booCheckPasswordCorrect == True :
-                    # Add new values to dicUser                   
-                    dicUser["userid"] = userid_bdd
-                    dicUser["firstname"] = firstname_bdd
-                    dicUser["lastname"] = lastname_bdd
+        int_count = cursor.rowcount
                     
-                    # Set session
-                    dicSession = setSessionUserId(dicUser)
+        if int_count == 0 :
+            dicError["password-errors"] = "L'identifiant et/ou mot de passe saisis sont incorrects."
+        if int_count == 1:
+            row = cursor.fetchone()
+            userid_bdd = row[0]
+            encode_password_64 = row[1]
+            firstname_bdd = row[2]
+            lastname_bdd = row[3]
             
+            # Retrieve password
+            # Decode the BDD password in bytes
+            decode_password_64 = base64.b64decode(encode_password_64.encode('ascii'))
+            
+            # Get the salt from BDD password, 32 is the length of the salt
+            salt_from_storage = decode_password_64[:32] 
+            
+            # Get the key from BDD password
+            key_from_storage = decode_password_64[32:]
+
+            # Generate hash from password user gives in login, with the salt value from BDD password
+            key_password_tocheck = hashlib.pbkdf2_hmac('sha256', password.encode('UTF-8'), salt_from_storage, 100000)                
+
+            # Compare the two keys, if identical, password is correct
+            if key_from_storage == key_password_tocheck :
+                print("password correct")
+                booCheckPasswordCorrect = True
+            else :
+                print("password incorrect")
+                dicError["password-errors"] = "L'identifiant et/ou mot de passe saisis sont incorrects."
+            
+            if booCheckPasswordCorrect == True :
+                # Add new values to dicUser                   
+                dicUser["userid"] = userid_bdd
+                dicUser["firstname"] = firstname_bdd
+                dicUser["lastname"] = lastname_bdd
+                
+                # Set session
+                dicSession = setSessionUserId(dicUser)
+        else:
+            booCheckMoreUsers = True
+            print("plusieurs utilisateurs trouves, erreur")
+            dicError["password-errors"] = "Plusieurs utilisateurs trouvés, merci de contacter le support."
     except psycopg2.Error as e:
         print("Failed to get record from PostGre table: {}".format(e))
 
@@ -671,27 +683,23 @@ def setSessionUserId(dicUser):
 
     # Generation the random id for cookie session
     random_cookie_session_id = uuid.uuid4()
-    
-    connection_usersession = psycopg2.connect(
-        database = options.pgsql_database,
-        user = options.pgsql_user,
-        password = options.pgsql_password,
-        host = options.pgsql_host,
-        port = options.pgsql_port)
-        
+            
     try :
-        cursor_session = connection_usersession.cursor()
+    
+        connection = setConnection()   
+        cursor = connection.cursor()
+        displayDatabaseInformation(cursor)
         
         sql_query = "INSERT INTO papareo.usersession (id_user, ip_user, date_creation, date_creation_timestamp, date_expiration, date_expiration_timestamp, cookie_session_id, active) "
         sql_query += "VALUES (%s, %s, %s, %s, %s, %s, %s, 'True') RETURNING cookie_session_id, date_expiration_timestamp; "
         
-        cursor_session.execute(sql_query, (dicUser["userid"], dicUser["ip_user"], datetime_jour, datetime_jour, date_expiration, date_expiration, random_cookie_session_id))
+        cursor.execute(sql_query, (dicUser["userid"], dicUser["ip_user"], datetime_jour, datetime_jour, date_expiration, date_expiration, random_cookie_session_id))
     
-        row_usersession = cursor_session.fetchone()       
+        row_usersession = cursor.fetchone()       
         cookie_session_id = row_usersession[0]
         date_expiration_timestamp = row_usersession[1]
         
-        connection_usersession.commit()
+        connection.commit()
     
         print("cookie_session_id"+cookie_session_id)
         print("date_expiration_timestamp"+str(date_expiration_timestamp))
@@ -700,10 +708,10 @@ def setSessionUserId(dicUser):
         print("Failed to insert record into PostGre table usersession: {}".format(e))
 
     finally:
-        if connection_usersession:
-            cursor_session.close()
-            connection_usersession.close()
-            print("PostGre connection_usersession is closed")
+        if connection:
+            cursor.close()
+            connection.close()
+            print("PostGre connection is closed")
             
     dicSession = {}
     dicSession["cookie_session_id"] = cookie_session_id
