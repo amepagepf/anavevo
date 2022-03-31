@@ -603,10 +603,10 @@ def checkUserLoginConnexion(dicGeneral):
         cursor.execute(sql_query, (username,))
 
         int_count = cursor.rowcount
-                    
-        if int_count == 0 :
+                 
+        if int_count != 1 :
             dicError["password-errors"] = "L'identifiant et/ou mot de passe saisis sont incorrects."
-        if int_count == 1:
+        else :
             row = cursor.fetchone()
             userid_bdd = row[0]
             encode_password_64 = row[1]
@@ -642,10 +642,7 @@ def checkUserLoginConnexion(dicGeneral):
                 
                 # Set session
                 dicSession = setSessionUserId(dicUser)
-        else:
-            booCheckMoreUsers = True
-            print("plusieurs utilisateurs trouves, erreur")
-            dicError["password-errors"] = "Plusieurs utilisateurs trouvés, merci de contacter le support."
+
     except psycopg2.Error as e:
         print("Failed to get record from PostGre table: {}".format(e))
 
