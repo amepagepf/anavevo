@@ -5,6 +5,7 @@
 	<!-- Required meta tags -->
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+	<script type="text/javascript" src="{{ static_url('js/jquery/jquery-3.6.0.min.js') }}"></script>
 	<script type="text/javascript" src="{{ static_url('js/anavevo.js') }}"></script>
 	<link rel="stylesheet" href="{{ static_url('css/style.css') }}" />
 	<link rel="stylesheet" href="{{ static_url('css/customstyle.css') }}" />
@@ -58,7 +59,19 @@
 						<div class="d-flex flex-column align-items-start input-container">
 							<label for="lastname-input">Nom : </label>
 							<input id="lastname-input" class="{% if dicError is not None and dicError['lastname-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="text" placeholder="Nom" name="lastname" value="{% if lastname is not None %}{{ lastname }}{% end %}" required>
-						</div>								
+						</div>
+						<div id="lastname-info-container" class="show-element-container">
+							<div class="info-vignette">
+							</div>
+							<div class="info">
+								<div class="info-ul">
+									<div id="lastname-info-type" class="element-info invalid-info">
+										<i class="fa-solid fa-circle-exclamation"></i>
+										<span class="info-text">Le nom doit être compris entre <strong>3 et 30 caractères</strong>, et peut posséder les caractères suivants: <strong>[,.-']</strong></span>
+									</div>
+								</div>
+							</div>
+						</div>
 						<div class="error-list"> 
 							{% if dicError is not None and dicError["lastname-errors"] is not None %}
 							<div class="message-errors">
@@ -72,7 +85,19 @@
 						<div class="d-flex flex-column align-items-start input-container">
 							<label for="firstname-input">Prénom : </label>
 							<input id="firstname-input" class="{% if dicError is not None and dicError['firstname-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="text" placeholder="Prénom" name="firstname" value="{% if firstname is not None %}{{ firstname }}{% end %}" required>
-						</div>								
+						</div>
+						<div id="firstname-info-container" class="hide-element-container">
+							<div class="info-vignette">
+							</div>
+							<div class="info">
+								<div class="info-ul">
+									<div id="firstname-info-type" class="element-info invalid-info">
+										<i class="fa-solid fa-circle-exclamation"></i>
+										<span class="info-text">Le prénom doit être compris entre <strong>3 et 30 caractères</strong>, et peut posséder les caractères suivants: <strong>[,.-']</strong></span>
+									</div>
+								</div>
+							</div>
+						</div>						
 						<div class="error-list"> 
 							{% if dicError is not None and dicError["firstname-errors"] is not None %}
 							<div class="message-errors">
@@ -86,7 +111,19 @@
 						<div class="d-flex flex-column align-items-start input-container">
 							<label for="username-input">Adresse email : </label>
 							<input id="username-input" class="{% if dicError is not None and dicError['username-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="text" placeholder="Email" name="username" value="{% if username is not None %}{{ username }}{% end %}" required>
-						</div>								
+						</div>
+						<div id="username-info-container" class="hide-element-container">
+							<div class="info-vignette">
+							</div>
+							<div class="info">
+								<div class="info-ul">
+									<div id="username-info-type" class="element-info invalid-info">
+										<i class="fa-solid fa-circle-exclamation"></i>
+										<span class="info-text">L'adresse email saisie est invalide</strong></span>
+									</div>
+								</div>
+							</div>
+						</div>
 						<div class="error-list"> 
 							{% if dicError is not None and dicError["username-errors"] is not None %}
 							<div class="message-errors">
@@ -100,9 +137,43 @@
 						<div class="d-flex flex-column align-items-start input-container">
 							<label for="password-input">Mot de passe : </label>
 							<div class="password-input">
-								<input id="password-input" class="{% if dicError is not None and dicError['password-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="password" placeholder="Mot de passe" name="password" value="{% if password is not None %}{{ password }}{% end %}" required>
+								<input id="password-input" class="{% if dicError is not None and dicError['password-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="password" placeholder="Mot de passe" name="password" data-toggle="popover" value="{% if password is not None %}{{ password }}{% end %}" required>
 								<i class="fa-solid fa-eye-slash toggle-eye" onclick="toggleEye(this)" id="togglePassword"></i>
 							</div>
+						</div>
+						<div id="password-info-container" class="hide-element-container">
+							<div class="info-vignette">
+							</div>
+							<div class="info">
+								<span class="info-title">Le mot de passe doit contenir:</span>
+								<div class="info-ul">
+									<div id="password-info-minuscule" class="element-info invalid-info">
+										<i class="fa-solid fa-circle-exclamation"></i>
+										<span class="info-text">Au moins <strong>une lettre minuscule</strong></span>
+									</div>
+									<div id="password-info-majuscule" class="element-info invalid-info">
+										<i class="fa-solid fa-circle-exclamation"></i>
+										<span class="info-text">Au moins <strong>une lettre masjucule</strong></span>
+									</div>
+									<div id="password-info-number" class="element-info invalid-info">
+										<i class="fa-solid fa-circle-exclamation"></i>
+										<span class="info-text">Au moins <strong>un chiffre</strong></span>
+									</div>
+									<div id="password-info-minlength" class="element-info invalid-info">
+										<i class="fa-solid fa-circle-exclamation"></i>
+										<span class="info-text">Au minimum <strong>8 caractères</strong></span>
+									</div>
+									<div id="password-info-maxlength" class="element-info invalid-info">
+										<i class="fa-solid fa-circle-exclamation"></i>
+										<span class="info-text">Au maximum <strong>32 caractères</strong></span>
+									</div>
+									<div id="password-info-special" class="element-info invalid-info">
+										<i class="fa-solid fa-circle-exclamation"></i>
+										<span class="info-text">Au moins <strong>1 caractère spécial: [~,!,@,#,$,%,^,&,*,-,=,.,;,']</strong></span>
+									</div>
+								</div>
+							</div>
+							
 						</div>
 						<div class="error-list"> 
 							{% if dicError is not None and dicError["password-errors"] is not None %}
@@ -111,7 +182,7 @@
 								<span class="mb-1">{{ dicError["password-errors"] }}</span>
 							</div>
 							{% end %}
-						</div>
+						</div>						
 					</div>
 					<div class="d-flex flex-column mt-3 element-container">
 						<div class="d-flex flex-column align-items-start input-container">
@@ -131,7 +202,7 @@
 						</div>
 					</div>
 					<div class="login-button">
-						<button type="submit" value="send" class="btn btn-outline-primary btn-lg mb-3 button-width-180" role="button">S'inscrire</button>
+						<button id="login-button" type="submit" value="send" class="btn btn-outline-primary btn-lg mb-3 button-width-180" role="button">S'inscrire</button>
 					</div>
 				</form>
 			</div>

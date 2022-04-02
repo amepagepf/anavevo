@@ -61,7 +61,85 @@ $BODY$;
 ALTER FUNCTION papareo.anavevo_jsonfy_function(character varying)
     OWNER TO postgres;
 
+-- Function to search element
+-- FUNCTION: papareo.anavevo_search_function(character varying)
 
+-- DROP FUNCTION IF EXISTS papareo.anavevo_search_function(character varying);
+
+CREATE OR REPLACE FUNCTION papareo.anavevo_search_function(
+	_strsearchinputtext character varying)
+    RETURNS character varying
+    LANGUAGE 'plpgsql'
+    COST 100
+    IMMUTABLE STRICT PARALLEL UNSAFE
+AS $BODY$
+	/*	Fonction anavevo_search_function: renvoie le HTML des résultats de la recherche saisie par l'utilisateur
+		Versions:
+			le 22/02/2022 (AM) Création
+			le 28/02/2022 (AM) Revue avec Hugues + gestion du tahitien
+	*/
+
+DECLARE 
+
+	_strHTML VARCHAR := '';
+	_strHTMLContent VARCHAR;
+	_charPlural CHAR(1);
+	_intCount INTEGER := 0;
+
+BEGIN
+
+	_strHTML := _strHTML || '<div class="search-results-container">';
+	_strHTML := _strHTML || 		'<div class="search-summary">';
+	_strHTML := _strHTML || 			'<div class="search-summary-title">';
+	_strHTML := _strHTML || 				'<h4>Nombre de résultats:</h4>';
+	_strHTML := _strHTML || 			'</div>';
+	_strHTML := _strHTML || 			'<div class="search-summary-results">';
+
+	SELECT COUNT(*) INTO _intCount
+	FROM papareo.entree
+ 	WHERE to_tsvector('french', html) || to_tsvector('french', html)
+	@@ to_tsquery('french', regexp_replace(_strsearchinputtext, '\s+', ' & ', 'gi'));
+	
+	IF _intCount > 0 THEN
+	
+		IF _intCount > 1 THEN
+			_charPlural := 's';
+		END IF;
+		
+		_strHTML := _strHTML || 				'<p>%s résultat%s trouvé%s.</p>';
+		_strHTML := _strHTML ||			'</div>';
+		_strHTML := _strHTML ||		'</div>';
+		_strHTML := _strHTML || 		'<div class="search-results">';
+		_strHTML := _strHTML || 			'<div class="search-results-title">';
+		_strHTML := _strHTML ||				'<h4>Résultats de la recherche:</h4>';
+		_strHTML := _strHTML || 			'</div>';
+		_strHTML := _strHTML ||			'<div class="search-results-content">';
+		_strHTML := _strHTML || 				'%s';
+		_strHTML := _strHTML ||			'</div>';
+		_strHTML := _strHTML || 		'</div>';
+		_strHTML := _strHTML || 	'</div>';
+		
+		SELECT string_agg(html, '<br>') into _strHTMLContent
+		FROM papareo.entree
+		WHERE to_tsvector('french', html)
+		@@ to_tsquery('french', regexp_replace(_strsearchinputtext, '\s+', ' & ', 'gi'));
+
+		_strHTML := FORMAT(_strHTML, _intCount, _charPlural, _charPlural, _strHTMLContent);
+
+	ELSE
+		_strHTML := _strHTML || 				'<p>Aucun résultat trouvé.</p>';
+		_strHTML := _strHTML || 			'</div>';
+		_strHTML := _strHTML || 		'</div>';
+		_strHTML := _strHTML || 	'</div>';		
+	END IF;
+	
+	RETURN _strHTML;
+	
+END;
+$BODY$;
+
+ALTER FUNCTION papareo.anavevo_search_function(character varying)
+    OWNER TO postgres;
 
 -- Table qui stocke les index de recherche
 CREATE TABLE papareo.entry(
@@ -84,20 +162,22 @@ INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, co
 	collection.id,
 	NULL,
 	CAST (NULL AS INTEGER),
-	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(TRIM(CONCAT(collection.title, ' ', collection.description))), '[\s+\-]', '<*>', 'gi'), '<*>') as contenu_accent,
-	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(TRIM(CONCAT(collection.title, ' ', collection.description))), True), '[\s+\-]', '<*>', 'gi'), '<*>') as contenu_sans_accent,
+	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(TRIM(CONCAT(collection.title, ' ', collection.description))), '\s+', '<*>', 'gi'), '<*>') as contenu_accent,
+	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(TRIM(CONCAT(collection.title, ' ', collection.description))), True), '\s+', '<*>', 'gi'), '<*>') as contenu_sans_accent,
 	concat('<a href="http://localhost:8888/library/', 
 		   CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
 		   '.col" ',
 		   ' class="btn btn-outline-primary btn-lg m-3" role="button">',
 		   CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
 		   '</a>'),
-	concat('<p class="title-text-result">',
+	concat('<div class="text-result-summary">',
+		   '<p class="title-text-result">',
 		   collection.title,
 		   '</p>',
 		   '<p class="description-text-result">',
 		   collection.description,
-		   '</p>'
+		   '</p>',
+		   '</div>'
 	)
 	FROM papareo.collection
 	WHERE collection.id IS NOT NULL)
@@ -108,8 +188,8 @@ INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, co
 	collection.id,
 	item.id,
 	CAST(NULL AS INTEGER),
-	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(TRIM(CONCAT(item.title, ' ', item.description))), '[\s+\-]', '<*>', 'gi'), '<*>') as contenu_accent,
-	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(TRIM(CONCAT(item.title, ' ', item.description))), True), '[\s+\-]', '<*>', 'gi'), '<*>') as contenu_sans_accent,
+	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(TRIM(CONCAT(item.title, ' ', item.description))), '\s+', '<*>', 'gi'), '<*>') as contenu_accent,
+	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(TRIM(CONCAT(item.title, ' ', item.description))), True), '\s+', '<*>', 'gi'), '<*>') as contenu_sans_accent,
 	concat('<a href="http://localhost:8888/library/', 
 	CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
 	'/', 
@@ -118,12 +198,14 @@ INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, co
 	' class="btn btn-outline-primary btn-lg m-3" role="button">',
 	CASE WHEN item.identifier IS NOT NULL THEN concat(CAST(item.id AS TEXT), '-', item.identifier) ELSE concat(CAST(item.id AS TEXT)) END,
 	'</a>'),
-	concat('<p class="title-text-result">',
+	concat('<div class="text-result-summary">',
+		   '<p class="title-text-result">',
 		   item.title,
 		   '</p>',
 		   '<p class="description-text-result">',
 		   item.description,
-		   '</p>'
+		   '</p>',
+		   '</div>'
 	)
 	FROM papareo.collection
 	INNER JOIN papareo.item on collection.id = item.collection_id
@@ -175,6 +257,7 @@ AS $BODY$
 			le 25/03/2022 (AM) Construction de toute la structure HTML en une requête correcte, pour resortir uniquement les éléments de la recherche
 			le 29/03/2022 (AM) La recherche plein texte sans ts_vector
 			le 30/03/2022 (AM) Ne rien renvoyer quand la recherche est vide + gestion du case insensitive
+			le 31/03/2022 (AM) Revue de la fonction de recherche, pour chercher dans toutes les balises <p> et y faire le remplacement
 	*/
 
 DECLARE 
@@ -226,12 +309,14 @@ BEGIN
 		with table_searchinput as (
 			-- Décompose les mots de la recherche en ligne de mots
 			SELECT ARRAY_TO_STRING(REGEXP_MATCHES(CONCAT('<*>', REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(_strsearchinputtext), True), '\s+', '<*>', 'gi'), '<*>'), '>(.*?)<', 'gi'), '') as row_searchinput
+			ORDER BY row_searchinput ASC
 		), table_searchinput_upper as (
 			-- Récupération des valeurs avec accents des mots de la recherche depuis la colonne contenu_sans_accent et contenu_accente
 			SELECT DISTINCT contenu_accent[array_position(contenu_sans_accent, table_searchinput.row_searchinput)] as row_searchinput_upper
 			FROM papareo.entry, table_searchinput
 			WHERE entry.contenu_sans_accent @> 
 			STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(table_searchinput.row_searchinput), True), '\s+', '<*>', 'gi'), '<*>')
+			ORDER BY row_searchinput_upper ASC
 		), regexpmatch_searchinput as (
 			-- Création du string pour le match du regex_match avec la séparation des mots
 			select string_agg(table_searchinput_upper.row_searchinput_upper, '|') as regexpmatch_searchinput
@@ -240,6 +325,7 @@ BEGIN
 			-- Rajout de la recherche par mot exact sur la regex d'un mot
 			SELECT CONCAT('\y', table_searchinput_upper.row_searchinput_upper, '\y') as row_searchinput_upper_regex
 			FROM table_searchinput_upper
+			ORDER BY table_searchinput_upper.row_searchinput_upper ASC
 		), array_regex_match as (
 			-- Mettre les mots regex dans un array pour le matching
 			select array_agg(table_searchinput_upper_regex.row_searchinput_upper_regex) as array_regex from table_searchinput_upper_regex	
@@ -266,6 +352,7 @@ BEGIN
 			FROM table_content_balise, regexpmatch_searchinput
 			WHERE htmlsummarymatch != ''
 			AND htmlsummarymatch IS NOT NULL
+			ORDER BY id asc, htmlsummary asc, htmlsummarymatch asc, word_regex asc
 		), array_regex_replace_word as (
 			-- Création d'un array pour le remplacement des mots de chaque contenu de balise <p> spécifique par id
 			select table_content_balise_notempty.id,
@@ -294,6 +381,7 @@ BEGIN
 			array_agg(table_replace_word.htmlsummarymatch) as array_match,
 			array_agg(table_replace_word.htmlsummaryreplace) as array_replace
 			FROM table_replace_word
+			where table_replace_word.htmlsummaryreplace is not null
 			GROUP BY table_replace_word.id, table_replace_word.htmlsummary
 		), table_replace_balise as (
 			-- On remplace chaque contenu de balise par le contenu avec le mark des mots dans le champ html général

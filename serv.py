@@ -488,8 +488,13 @@ def checkUserRegisterInformation(dicGeneral):
         booUserInformationHasError = True
     
     # Verify strength password
-    # TODO
-    
+    regex_password = re.compile('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8, 32}$')
+    if re.fullmatch(regex_password, password):
+        print("Valid password")
+    else:
+        print("Invalid password")
+        dicError["password-errors"] = "Le mot de passe doit faire au minimum 8 caractères, avec au moins une lettre minuscule, une lettre majuscule, un caractère spécial et un chiffre."
+        booUserInformationHasError = True
     # Verify confirm password equal to password  
     if password != confirmpassword :
         print("password not identical")
@@ -605,6 +610,7 @@ def checkUserLoginConnexion(dicGeneral):
         int_count = cursor.rowcount
                  
         if int_count != 1 :
+            print("password incorrect")
             dicError["password-errors"] = "L'identifiant et/ou mot de passe saisis sont incorrects."
         else :
             row = cursor.fetchone()
