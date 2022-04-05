@@ -15,6 +15,8 @@ import requests
 import json
 import psycopg2.extras
 import uuid
+import logging
+from tornado.log import enable_pretty_logging
 from datetime import datetime, date, timedelta
 from def_init import *
 from tornado.options import define, options
@@ -44,6 +46,69 @@ path_dbconfig = "C:/Projets/anavevo/conf/"
 #path_dbconfig = "conf/"
 configdb_filename = "database.conf"
 path_dbconfig = os.path.join(path_dbconfig, configdb_filename)
+
+path_log = "log/"
+# Define handler files
+handler_access = logging.FileHandler(os.path.join(path_log, "anavevo_access_log.log"))
+handler_application = logging.FileHandler(os.path.join(path_log, "anavevo.log"))
+handler_general = logging.FileHandler(os.path.join(path_log, "anavevo_manager.log"))
+
+formatter = logging.Formatter('[%(levelname)s] - %(name)s - %(asctime)s : %(message)s')
+
+handler_access.setFormatter(formatter)
+handler_application.setFormatter(formatter)
+handler_general.setFormatter(formatter)
+
+# Define the logger
+access_log = logging.getLogger("tornado.access")
+access_log.setLevel(logging.DEBUG)
+access_log.addHandler(handler_access)
+access_log.info('test')
+
+app_log = logging.getLogger("tornado.application")
+app_log.setLevel(logging.DEBUG)
+app_log.addHandler(handler_application)
+app_log.info('test')
+
+gen_log = logging.getLogger("tornado.general")
+gen_log.setLevel(logging.DEBUG)
+gen_log.addHandler(handler_general)
+gen_log.info('test')
+
+enable_pretty_logging()
+
+'''
+handler = logging.FileHandler("log_file_filename.log")
+app_log = logging.getLogger("tornado.application")
+enable_pretty_logging()
+app_log.addHandler(handler)
+app_log.info('foo')
+
+
+
+# create logger
+logger = logging.getLogger('simple_example')
+logger.setLevel(logging.DEBUG)
+
+# create console handler and set level to debug
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+
+# create formatter
+formatter = logging.Formatter('[%(levelname)s] - %(name)s - %(asctime)s : %(message)s')
+
+# add formatter to ch
+ch.setFormatter(formatter)
+
+# add ch to logger
+logger.addHandler(ch)
+
+# 'application' code
+logger.debug('debug message')
+logger.info('info message')
+logger.warning('warn message')
+logger.error('error message')
+logger.critical('critical message')'''
 
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
@@ -315,7 +380,7 @@ class LoggedHandler(BaseHandler):
         strHTMLPath = os.path.join(path_html, "logged.html")
         
         self.render(strHTMLPath, path_url=path_url, label_user=label_user)
-        print(self.get_secure_cookie('username'))
+        app_log.debug(self.get_secure_cookie('username'))
 
 class LogoutHandler(BaseHandler):
     def get(self):
@@ -394,13 +459,13 @@ class HomeHandler(BaseHandler):
             createJSONFile(arrJSONCollection, arrJSONItem, arrJSONEssence, None, None, "id", "identifier", parent_directory, "collection")     
 
         except psycopg2.Error as e:
-            print("Failed to get record from PostGre table: {}".format(e))
+            app_log.error("Failed to get record from PostGre table: {}".format(e))
 
         finally:
             if connection:
              cursor.close()
              connection.close()
-             print("PostGre connection is closed")
+             app_log.debug("PostGre connection is closed")
 
         strHTMLPath = os.path.join(path_html, "home.html")
         
@@ -413,7 +478,7 @@ def setConnection():
 
     params = getConfigDictionnaryFromConfigFile(path_dbconfig, "postgresql")
     
-    print('Connecting to the PostgreSQL database...')
+    app_log.debug('Connecting to the PostgreSQL database...')
     connection = psycopg2.connect(**params)
             
     return connection
@@ -421,12 +486,12 @@ def setConnection():
 def displayDatabaseInformation(cursor):
 
         # execute a statement
-        print('PostgreSQL database version:')
+        app_log.debug('PostgreSQL database version:')
         cursor.execute('SELECT version()')
 
         # display the PostgreSQL database server version
         db_version = cursor.fetchone()
-        print(db_version)
+        app_log.debug(db_version)
         
 def getConfigDictionnaryFromConfigFile(fileName, section):
     #Create a parser
@@ -464,40 +529,40 @@ def checkUserRegisterInformation(dicGeneral):
     
     # Verify lastname validity
     if re.fullmatch(regex_name, lastname): 
-        print("valid lastname")
+        app_log.debug("valid lastname")
     else :
-        print("non valid lastname")
+        app_log.error("non valid lastname")
         dicError["lastname-errors"] = "Le nom est invalide."
         booUserInformationHasError = True
     
     # Verify firstname validity        
     if re.fullmatch(regex_name, firstname): 
-        print("valid firstname")
+        app_log.debug("valid firstname")
     else :
-        print("non valid firstname")
+        app_log.error("non valid firstname")
         dicError["firstname-errors"] = "Le prénom est invalide."
         booUserInformationHasError = True
         
     # Verify email validity
     regex_email = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
     if re.fullmatch(regex_email, username):
-        print("Valid email")
+        app_log.debug("Valid email")
     else:
-        print("Invalid email")
+        app_log.error("Invalid email")
         dicError["username-errors"] = "L'email saisie est invalide."
         booUserInformationHasError = True
     
     # Verify strength password
     regex_password = re.compile('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8, 32}$')
     if re.fullmatch(regex_password, password):
-        print("Valid password")
+        app_log.debug("Valid password")
     else:
-        print("Invalid password")
+        app_log.error("Invalid password")
         dicError["password-errors"] = "Le mot de passe doit faire au minimum 8 caractères, avec au moins une lettre minuscule, une lettre majuscule, un caractère spécial et un chiffre."
         booUserInformationHasError = True
     # Verify confirm password equal to password  
     if password != confirmpassword :
-        print("password not identical")
+        app_log.error("password not identical")
         dicError["confirmpassword-errors"] = "Le mot de passe n'est pas identique."
         booUserInformationHasError = True
         
@@ -515,20 +580,20 @@ def checkUserRegisterInformation(dicGeneral):
         int_count = cursor.fetchone()[0]
                 
         if int_count > 0 :
-            print("username non disponible")
+            app_log.error("username non disponible")
             dicError["username-errors"] = "L'identifiant saisi est déjà pris."
             booUserInformationHasError = True
         else :
-            print("username disponible")
+            app_log.debug("username disponible")
             
     except psycopg2.Error as e:
-        print("Failed to get record from PostGre table: {}".format(e))
+        app_log.error("Failed to get record from PostGre table: {}".format(e))
 
     finally:
         if connection:
             cursor.close()
             connection.close()
-            print("PostGre connection is closed")  
+            app_log.debug("PostGre connection is closed")  
 
     dicGeneral["dicUser"] = dicUser   
     dicGeneral["dicError"] = dicError
@@ -572,13 +637,13 @@ def setHashedPassword(dicGeneral):
         connection.commit()
     
     except psycopg2.Error as e:
-        print("Failed to insert record from PostGre table: {}".format(e))
+        app_log.error("Failed to insert record from PostGre table: {}".format(e))
 
     finally:
         if connection:
             cursor.close()
             connection.close()
-            print("PostGre connection_user is closed")
+            app_log.debug("PostGre connection_user is closed")
     
 def checkUserLoginConnexion(dicGeneral):
 
@@ -610,7 +675,7 @@ def checkUserLoginConnexion(dicGeneral):
         int_count = cursor.rowcount
                  
         if int_count != 1 :
-            print("password incorrect")
+            app_log.error("password incorrect")
             dicError["password-errors"] = "L'identifiant et/ou mot de passe saisis sont incorrects."
         else :
             row = cursor.fetchone()
@@ -634,10 +699,10 @@ def checkUserLoginConnexion(dicGeneral):
 
             # Compare the two keys, if identical, password is correct
             if key_from_storage == key_password_tocheck :
-                print("password correct")
+                app_log.debug("password correct")
                 booCheckPasswordCorrect = True
             else :
-                print("password incorrect")
+                app_log.error("password incorrect")
                 dicError["password-errors"] = "L'identifiant et/ou mot de passe saisis sont incorrects."
             
             if booCheckPasswordCorrect == True :
@@ -650,13 +715,13 @@ def checkUserLoginConnexion(dicGeneral):
                 dicSession = setSessionUserId(dicUser)
 
     except psycopg2.Error as e:
-        print("Failed to get record from PostGre table: {}".format(e))
+        app_log.error("Failed to get record from PostGre table: {}".format(e))
 
     finally:
         if connection:
             cursor.close()
             connection.close()
-            print("PostGre connection is closed")
+            app_log.debug("PostGre connection is closed")
 
     dicGeneral["dicUser"] = dicUser 
     dicGeneral["dicSession"] = dicSession    
@@ -697,17 +762,17 @@ def setSessionUserId(dicUser):
         
         connection.commit()
     
-        print("cookie_session_id"+cookie_session_id)
-        print("date_expiration_timestamp"+str(date_expiration_timestamp))
+        app_log.debug("cookie_session_id"+cookie_session_id)
+        app_log.debug("date_expiration_timestamp"+str(date_expiration_timestamp))
         
     except psycopg2.Error as e:
-        print("Failed to insert record into PostGre table usersession: {}".format(e))
+        app_log.error("Failed to insert record into PostGre table usersession: {}".format(e))
 
     finally:
         if connection:
             cursor.close()
             connection.close()
-            print("PostGre connection is closed")
+            app_log.debug("PostGre connection is closed")
             
     dicSession = {}
     dicSession["cookie_session_id"] = cookie_session_id
@@ -826,5 +891,5 @@ if __name__ == "__main__":
     http_server = tornado.httpserver.HTTPServer(app)
 
     http_server.listen(options.port)
-    print("The server is listening on port " + str(options.port))
+    app_log.info("The server is listening on port " + str(options.port))
     tornado.ioloop.IOLoop.current().start()
