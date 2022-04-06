@@ -21,6 +21,7 @@ $(document).ready(function(){
 		$('#lastname-info-container').removeClass('show-element-container').addClass('hide-element-container');
 		$('#lastname-label-input').removeClass('label-input-error');
 		$('#lastname-input').removeClass('style-input-error').addClass('style-input');
+		$('#lastname-error-list').hide();
 	}).focusout(function() {
 		
 		var strLastnameInput = $(this).val();
@@ -59,6 +60,7 @@ $(document).ready(function(){
 		$('#firstname-info-container').removeClass('show-element-container').addClass('hide-element-container');
 		$('#firstname-label-input').removeClass('label-input-error');
 		$('#firstname-input').removeClass('style-input-error').addClass('style-input');
+		$('#firstname-error-list').hide();
 	}).focusout(function() {
 		
 		var strFirstNameInput = $(this).val();
@@ -97,11 +99,12 @@ $(document).ready(function(){
 		$('#username-info-container').removeClass('show-element-container').addClass('hide-element-container');
 		$('#username-label-input').removeClass('label-input-error');
 		$('#username-input').removeClass('style-input-error').addClass('style-input');
-		$('#username-error-list').hide();
+		//$('#username-error-list').hide();
+		$('#username-error-list').children().remove();
 	}).focusout(function() {
 
 		var strUsernameInput = $(this).val();
-		
+
 		var regexName = /([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+/
 
 		booIncorrectUserName = mapBooleans["booIncorrectUserName"];
@@ -125,13 +128,6 @@ $(document).ready(function(){
 			$('#username-label-input').removeClass('label-input-error');
 			$('#username-input').removeClass('style-input-error').addClass('style-input');
 		}
-		
-		/*var objUserNameErrorList = $('#username-error-list');
-		if (objUserNameErrorList.children().length > 0) {
-			objUserNameErrorList.show();
-			$('#username-label-input').addClass('label-input-error');
-			$('#username-input').removeClass('style-input').addClass('style-input-error');
-		}*/
 		
 		mapBooleans["booIncorrectUserName"] = booIncorrectUserName;
 		
@@ -219,6 +215,7 @@ $(document).ready(function(){
 		$('#password-info-container').removeClass('hide-element-container').addClass('show-element-container');
 		$('#password-label-input').removeClass('label-input-error');
 		$('#password-input').removeClass('style-input-error').addClass('style-input');
+		$('#password-error-list').hide();
 	}).focusout(function() {
 		$('#password-info-container').removeClass('show-element-container').addClass('hide-element-container');
 		var strPasswordInput = $(this).val();
@@ -243,6 +240,7 @@ $(document).ready(function(){
 		$('#confirmpassword-info-container').removeClass('show-element-container').addClass('hide-element-container');
 		$('#confirmpassword-label-input').removeClass('label-input-error');
 		$('#confirmpassword-input').removeClass('style-input-error').addClass('style-input');
+		$('#confirmpassword-error-list').hide();
 	}).focusout(function() {
 
 		var strConfirmPasswordInput = $(this).val();
