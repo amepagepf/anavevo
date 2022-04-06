@@ -155,8 +155,23 @@ CREATE TABLE papareo.entry(
 )
 
 -- Requête INSERT dans la table entry
-INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, contenu_sans_accent, htmllink, htmlsummary)
+-- FUNCTION: papareo.anavevo_insert_function()
 
+-- DROP FUNCTION IF EXISTS papareo.anavevo_insert_function();
+
+CREATE OR REPLACE FUNCTION papareo.anavevo_insert_function(
+	)
+    RETURNS void
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+
+DECLARE 
+
+BEGIN
+
+	INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, contenu_sans_accent, htmllink, htmlsummary)
 	-- Requête pour récupérer uniquement les collections
 	(SELECT 
 	collection.id,
@@ -164,20 +179,18 @@ INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, co
 	CAST (NULL AS INTEGER),
 	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(TRIM(CONCAT(collection.title, ' ', collection.description))), '\s+', '<*>', 'gi'), '<*>') as contenu_accent,
 	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(TRIM(CONCAT(collection.title, ' ', collection.description))), True), '\s+', '<*>', 'gi'), '<*>') as contenu_sans_accent,
-	concat('<a href="http://localhost:8888/library/', 
+	concat('<a href="https://v-anavevo.upf.pf/library/', 
 		   CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
 		   '.col" ',
 		   ' class="btn btn-outline-primary btn-lg m-3" role="button">',
 		   CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
 		   '</a>'),
-	concat('<div class="text-result-summary">',
-		   '<p class="title-text-result">',
+	concat('<p class="title-text-result">',
 		   collection.title,
 		   '</p>',
 		   '<p class="description-text-result">',
 		   collection.description,
-		   '</p>',
-		   '</div>'
+		   '</p>'
 	)
 	FROM papareo.collection
 	WHERE collection.id IS NOT NULL)
@@ -190,7 +203,7 @@ INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, co
 	CAST(NULL AS INTEGER),
 	STRING_TO_ARRAY(REGEXP_REPLACE(UPPER(TRIM(CONCAT(item.title, ' ', item.description))), '\s+', '<*>', 'gi'), '<*>') as contenu_accent,
 	STRING_TO_ARRAY(REGEXP_REPLACE(papareo.tif_desaccentue(UPPER(TRIM(CONCAT(item.title, ' ', item.description))), True), '\s+', '<*>', 'gi'), '<*>') as contenu_sans_accent,
-	concat('<a href="http://localhost:8888/library/', 
+	concat('<a href="https://v-anavevo.upf.pf/library/', 
 	CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
 	'/', 
 	CASE WHEN item.identifier IS NOT NULL THEN concat(CAST(item.id AS TEXT), '-', item.identifier) ELSE concat(CAST(item.id AS TEXT)) END,
@@ -198,14 +211,12 @@ INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, co
 	' class="btn btn-outline-primary btn-lg m-3" role="button">',
 	CASE WHEN item.identifier IS NOT NULL THEN concat(CAST(item.id AS TEXT), '-', item.identifier) ELSE concat(CAST(item.id AS TEXT)) END,
 	'</a>'),
-	concat('<div class="text-result-summary">',
-		   '<p class="title-text-result">',
+	concat('<p class="title-text-result">',
 		   item.title,
 		   '</p>',
 		   '<p class="description-text-result">',
 		   item.description,
-		   '</p>',
-		   '</div>'
+		   '</p>'
 	)
 	FROM papareo.collection
 	INNER JOIN papareo.item on collection.id = item.collection_id
@@ -220,7 +231,7 @@ INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, co
 	NULL,
 	NULL,
 	concat('<ul><div class="essence-navigation-hide">',
-	'<a href="http://localhost:8888/library/', 
+	'<a href="https://v-anavevo.upf.pf/library/', 
 	CASE WHEN collection.identifier IS NOT NULL THEN concat(CAST(collection.id AS TEXT), '-', collection.identifier) ELSE concat(CAST(collection.id AS TEXT)) END,
 	'/', 
 	CASE WHEN item.identifier IS NOT NULL THEN concat(CAST(item.id AS TEXT), '-', item.identifier) ELSE concat(CAST(item.id AS TEXT)) END,
@@ -233,7 +244,14 @@ INSERT INTO papareo.entry(id_collection, id_item, id_essence, contenu_accent, co
 	FROM papareo.collection
 	INNER JOIN papareo.item ON collection.id = item.collection_id
 	INNER JOIN papareo.essence ON item.id = essence.item_id
-	WHERE essence.id IS NOT NULL)
+	WHERE essence.id IS NOT NULL);
+	 	
+END;
+$BODY$;
+
+ALTER FUNCTION papareo.anavevo_insert_function()
+    OWNER TO postgres;
+
 
 
 
@@ -258,6 +276,7 @@ AS $BODY$
 			le 29/03/2022 (AM) La recherche plein texte sans ts_vector
 			le 30/03/2022 (AM) Ne rien renvoyer quand la recherche est vide + gestion du case insensitive
 			le 31/03/2022 (AM) Revue de la fonction de recherche, pour chercher dans toutes les balises <p> et y faire le remplacement
+			le 05/04/2022 (AM) Le remplacement doit être case sensitive quand le même mot est présent plusieurs fois avec une casse différente
 	*/
 
 DECLARE 
@@ -265,8 +284,17 @@ DECLARE
 	_strHTML VARCHAR := '';
 	_strHTMLContent VARCHAR;
 	_strFormRegexpMatches VARCHAR := '';
-	_charPlural CHAR(1);
+	_charPlural CHAR(1);	
 	_intCount INTEGER := 0;
+	
+	_intTotalOccurence INTEGER := 0;
+	_charPluralOccurence CHAR(1);
+	_intTotalCollection INTEGER := 0;
+	_charPluralCollection CHAR(1);
+	_intTotalItem INTEGER := 0;
+	_charPluralItem CHAR(1);
+	_intTotalEssence INTEGER := 0;
+	_charPluralEssence CHAR(1);
 
 BEGIN
 
@@ -291,7 +319,11 @@ BEGIN
 		END IF;
 		
 		SELECT CONCAT(_strHTML,
-					'<p>%s résultat%s trouvé%s.</p>',
+					--'<p>%s résultat%s trouvé%s.</p>',
+					'<p>%s occurence%s trouvée%s.</p>',
+     				'<p>%s collection%s trouvée%s.</p>',
+					'<p>%s item%s trouvé%s.</p>',
+					'<p>%s essence%s trouvée%s.</p>',
 				'</div>',
 			'</div>',
 			'<div class="search-results">',
@@ -304,7 +336,7 @@ BEGIN
 			'</div>',
 		'</div>')
 		INTO _strHTML;
-		
+				
 		-- Requête pour constuire le HTML des résultats issus de la recherche
 		with table_searchinput as (
 			-- Décompose les mots de la recherche en ligne de mots
@@ -344,6 +376,7 @@ BEGIN
 			id,
 			htmlsummary,
 			htmlsummarymatch, 
+			CONCAT('\y', array_to_string(regexp_matches(htmlsummarymatch, regexpmatch_searchinput.regexpmatch_searchinput, 'gi'), ''), '\y') as word_match,
 			concat('<span class="mark-result">',
 					array_to_string(regexp_matches(CONCAT('<*>', regexp_replace(array_to_string(regexp_matches(htmlsummarymatch, regexpmatch_searchinput.regexpmatch_searchinput, 'gi'), ''), '\s+', '<*>'), '<*>'),
 													'>(.*?)<',
@@ -353,12 +386,16 @@ BEGIN
 			WHERE htmlsummarymatch != ''
 			AND htmlsummarymatch IS NOT NULL
 			ORDER BY id asc, htmlsummary asc, htmlsummarymatch asc, word_regex asc
+		), totaloccurence as (
+			SELECT COUNT(word_match) as total,
+			CASE WHEN COUNT(word_match) > 1 THEN 's' END as charplural
+			FROM table_content_balise_notempty
 		), array_regex_replace_word as (
 			-- Création d'un array pour le remplacement des mots de chaque contenu de balise <p> spécifique par id
 			select table_content_balise_notempty.id,
 			table_content_balise_notempty.htmlsummary,
 			table_content_balise_notempty.htmlsummarymatch,
-			array_regex_match.array_regex as array_match,
+			array_agg(table_content_balise_notempty.word_match) as array_match,
 			array_agg(table_content_balise_notempty.word_regex) as array_replace		
 			from table_content_balise_notempty, array_regex_match
 			group by table_content_balise_notempty.id, array_regex_match.array_regex, table_content_balise_notempty.htmlsummary, table_content_balise_notempty.htmlsummarymatch
@@ -371,7 +408,7 @@ BEGIN
 			papareo.regexp_remplacechaque(array_regex_replace_word.htmlsummarymatch, 
 										  array_regex_replace_word.array_match, 
 										  array_regex_replace_word.array_replace,
-										  'gi') as htmlsummaryreplace
+										  'g') as htmlsummaryreplace
 			from array_regex_replace_word							  
 		), array_regex_replace_balise as (
 			-- On transforme les contenus des balises en array et le remplacement du contenu de la balise avec les balises mark pour chaque mot groupé par id
@@ -398,6 +435,27 @@ BEGIN
 			SELECT DISTINCT table_replace_balise.htmlsummaryreplaced, entry.id, entry.htmllink, entry.id_collection, entry.id_item, entry.id_essence
 			FROM papareo.entry
 			INNER JOIN table_replace_balise ON table_replace_balise.id = entry.id
+		), numbercollection as (
+			SELECT COUNT(*) as total,
+			CASE WHEN count(*) > 1 THEN 's' END as charplural
+			FROM elementresults
+			WHERE elementresults.id_collection IS NOT NULL
+			AND elementresults.id_item IS NULL
+			AND elementresults.id_essence IS NULL
+		), numberitem as (
+			SELECT COUNT(*) as total,
+			CASE WHEN count(*) > 1 THEN 's' END as charplural
+			FROM elementresults
+			WHERE elementresults.id_collection IS NOT NULL
+			AND elementresults.id_item IS NOT NULL
+			AND elementresults.id_essence IS NULL
+		), numberessence as (
+			SELECT COUNT(*) as total,
+			CASE WHEN count(*) > 1 THEN 's' END as charplural
+			FROM elementresults
+			WHERE elementresults.id_collection IS NOT NULL
+			AND elementresults.id_item IS NOT NULL
+			AND elementresults.id_essence IS NOT NULL
 		), uniquecollection as (
 			-- On récupère la collection associée à elementsresults
 			SELECT DISTINCT entry.htmllink, elementresults.htmlsummaryreplaced, entry.htmlsummary, entry.id_collection, entry.id_item, entry.id_essence, entry.id
@@ -504,12 +562,34 @@ BEGIN
 							'</div>',
 						'</ul>',
 					'</td>',
-			  '</tr>'), '')
-		INTO _strHTMLContent
-		FROM uniquecollection
+			  '</tr>'), ''),
+		totaloccurence.total, totaloccurence.charplural,
+		numbercollection.total, numbercollection.charplural,
+		numberitem.total, numberitem.charplural,
+		numberessence.total, numberessence.charplural
+		INTO _strHTMLContent,  
+		_intTotalOccurence, _charPluralOccurence,
+		_intTotalCollection, _charPluralCollection,
+		_intTotalItem, _charPluralItem,
+		_intTotalEssence, _charPluralEssence
+		FROM uniquecollection, 
+		totaloccurence, 
+		numbercollection,
+		numberitem,
+		numberessence
+		GROUP BY totaloccurence.total, totaloccurence.charplural, 
+		numbercollection.total, numbercollection.charplural,
+		numberitem.total, numberitem.charplural,
+		numberessence.total, numberessence.charplural
 		;
-						
-		_strHTML := FORMAT(_strHTML, _intCount, _charPlural, _charPlural, _strsearchinputtext, _strHTMLContent);
+		
+		_strHTML := FORMAT(_strHTML, 
+						   --_intCount, _charPlural, _charPlural, 
+						   _intTotalOccurence, _charPluralOccurence, _charPluralOccurence, 
+						   _intTotalCollection, _charPluralCollection, _charPluralCollection, 
+						   _intTotalItem, _charPluralItem, _charPluralItem, 
+						   _intTotalEssence, _charPluralEssence, _charPluralEssence, 
+						   _strsearchinputtext, _strHTMLContent);
 
 	ELSE
 		SELECT CONCAT(_strHTML,
