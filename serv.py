@@ -532,7 +532,7 @@ def checkUserRegisterInformation(dicGeneral):
         app_log.debug("valid lastname")
     else :
         app_log.error("non valid lastname")
-        dicError["lastname-errors"] = "Le nom est invalide."
+        dicError["lastname-errors"] = "Le nom saisis est invalide."
         booUserInformationHasError = True
     
     # Verify firstname validity        
@@ -540,7 +540,7 @@ def checkUserRegisterInformation(dicGeneral):
         app_log.debug("valid firstname")
     else :
         app_log.error("non valid firstname")
-        dicError["firstname-errors"] = "Le prénom est invalide."
+        dicError["firstname-errors"] = "Le prénom saisi est invalide."
         booUserInformationHasError = True
         
     # Verify email validity
@@ -553,12 +553,12 @@ def checkUserRegisterInformation(dicGeneral):
         booUserInformationHasError = True
     
     # Verify strength password
-    regex_password = re.compile('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8, 32}$')
+    regex_password = re.compile('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,32}$')
     if re.fullmatch(regex_password, password):
         app_log.debug("Valid password")
     else:
         app_log.error("Invalid password")
-        dicError["password-errors"] = "Le mot de passe doit faire au minimum 8 caractères, avec au moins une lettre minuscule, une lettre majuscule, un caractère spécial et un chiffre."
+        dicError["password-errors"] = "Le mot de passe saisi est invalide."
         booUserInformationHasError = True
     # Verify confirm password equal to password  
     if password != confirmpassword :
@@ -581,7 +581,7 @@ def checkUserRegisterInformation(dicGeneral):
                 
         if int_count > 0 :
             app_log.error("username non disponible")
-            dicError["username-errors"] = "L'identifiant saisi est déjà pris."
+            dicError["username-errors"] = "L'identifiant saisi n'est pas disponible."
             booUserInformationHasError = True
         else :
             app_log.debug("username disponible")

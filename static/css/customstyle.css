@@ -1,5 +1,14 @@
+/*** Generic styles enabled everywhere ***/
 .list-nostyled {
   list-style: none;
+}
+
+#navbarContent .nav-item:last-of-type {
+	margin-left: auto;
+}
+
+.navbar-custom {
+	width:100%;
 }
 
 .style-input {
@@ -17,6 +26,129 @@
 	border: 1px solid #d93025;
 }
 
+.label-input-error {
+	color: #d93025;
+}
+
+.arrow-down {
+	width: 0;
+	height: 0;
+	border-left: 10px solid transparent;
+	border-right: 10px solid transparent;
+	border-top: 10px solid #000;
+	margin-top: 32px;
+	cursor: pointer;
+}
+
+.arrow-right {
+	width: 0; 
+	height: 0; 
+	border-top: 10px solid transparent;
+	border-bottom: 10px solid transparent;
+	border-left: 10px solid #000;	
+	margin-top: 32px;
+	cursor: pointer;
+	margin-left: 10px;
+}
+
+.no-arrow {
+	width: 20px;
+}
+
+.input-container {
+	
+	width: 100%;
+	max-width: 450px;
+}
+
+.collection-container {
+	display: flex;
+	flex-direction: column;
+}
+
+.collection-navigation {
+	display: flex;
+	flex-direction: row;
+}
+
+.item-container-show {
+	display: flex;
+	flex-direction: column;
+}
+
+.item-container-hide {
+	display: none;
+}
+
+.item-navigation {
+	display: flex;
+	flex-direction: row;
+}
+
+/*.item-container {
+	display: flex;
+	flex-direction: column;
+}*/
+
+.essence-navigation-hide {
+	display: none;
+}
+
+.essence-navigation-show {
+	display: flex;
+	margin-left: 10px;
+}
+
+.invalid-info {
+	color: #d93025;
+}
+
+.valid-info {
+	color: green;
+}
+
+.error-list {
+	height: 10px;
+	max-height: 10px;
+	color: #d93025;
+	max-width: 450px;
+	width: 100%;
+}
+
+.button-width-150 {
+	width: 150px;
+}
+
+.button-width-180 {
+	width: 180px;
+}
+
+.button-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 30px;
+	justify-content: center;
+}
+
+.message-errors {
+	display: flex;
+	align-items: start;
+	padding-top: 2px;
+	margin-left: 6px;
+}
+
+.error-icon {
+	width: 18px;
+	height: 18px;
+	fill: #d93025;
+	margin-right: 4px;
+	display: flex;
+	align-self: center;
+}
+
+
+/*** Home.html part search ***/
 .search-container {
 	margin: 5px;
 }
@@ -27,6 +159,21 @@
 
 .search-input-container {
 	margin-top: 30px;
+}
+
+.delete-search-show {
+	position: absolute;
+	margin-left: 1073px;
+	color: #cbc4c4;
+	cursor: pointer;
+}
+
+.delete-search-hide {
+	position: absolute;
+	margin-left: 1073px;
+	color: #cbc4c4;
+	cursor: pointer;
+	display: none;
 }
 
 .search-results-container {
@@ -56,21 +203,6 @@
 	line-height: 10px;
 }
 
-.delete-search-show {
-	position: absolute;
-	margin-left: 1073px;
-	color: #cbc4c4;
-	cursor: pointer;
-}
-
-.delete-search-hide {
-	position: absolute;
-	margin-left: 1073px;
-	color: #cbc4c4;
-	cursor: pointer;
-	display: none;
-}
-
 .search-results {
 	display: flex;
 	flex-direction: column;
@@ -78,92 +210,44 @@
 	width: 100%;
 }
 
-.collection-navigation {
-	display: flex;
-	flex-direction: row;
-}
-
-.collection-container {
-	display: flex;
-	flex-direction: column;
-}
-
-.item-navigation {
-	display: flex;
-	flex-direction: row;
-}
-
-.item-container {
-	display: flex;
-	flex-direction: column;
-}
-
-.item-container-hide {
-	display: none;
-}
-
-.item-container-show {
-	display: flex;
-	flex-direction: column;
-}
-
-.essence-navigation-hide {
-	display: none;
-}
-
-.essence-navigation-show {
-	display: flex;
-	margin-left: 10px;
-}
-
-.arrow-down {
-	width: 0;
-	height: 0;
-	border-left: 10px solid transparent;
-	border-right: 10px solid transparent;
-	border-top: 10px solid #000;
-	margin-top: 32px;
-	cursor: pointer;
-}
-
-.arrow-right {
-	width: 0; 
-	height: 0; 
-	border-top: 10px solid transparent;
-	border-bottom: 10px solid transparent;
-	border-left: 10px solid #000;	
-	margin-top: 32px;
-	cursor: pointer;
-	margin-left: 10px;
-}
-
-.no-arrow {
-	width: 20px;
-}
-
-/*.username-error-list {
-	height: 10px;
-	max-height: 10px;
-}*/
-
-/*.username-not-exist {
-	color: #d93025;
-}*/
-
-.input-container {
+.search-results-content {
 	width: 100%;
-	max-width: 450px;
+	padding-right: 32px;
+	display: flex;
+	flex-direction: column;
 }
 
-/*.password-input-container {
-	width: 100%;
-}*/
+.search-results-nocontent {
+	padding-right: 32px;
+}
 
-.error-list {
-	height: 10px;
-	max-height: 10px;
-	color: #d93025;
-	max-width: 450px;
+.text-result-summary {
+	align-items: start;
+	display: flex;
+	flex-direction: column;
+	margin-left: 40px;
+}
+
+.title-text-result {
+	text-transform: uppercase;
+	margin-bottom: auto;
+}
+
+.description-text-result{
+	font-size: 12px;
+}
+
+.mark-result {
+	background-color: #50e132;
+	font-weight: bold
+}
+
+
+/*** Login and register html part ***/
+.login-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 	width: 100%;
 }
 
@@ -173,6 +257,7 @@
 	flex-direction: column;
 	align-items: center;
 }
+
 .element-container {
 	width: 100%;
 	align-items: center;
@@ -182,46 +267,16 @@
 	margin-bottom: 40px;
 }
 
-.message-errors {
-	display: flex;
-	align-items: start;
-	padding-top: 2px;
-	margin-left: 6px;
-}
-
-.error-icon {
-	width: 18px;
-	height: 18px;
-	fill: #d93025;
-	margin-right: 4px;
-	display: flex;
-	align-self: center;
-}
-
 .password-input {
 	display: flex;
 	flex-direction: row;
 	width: 100%;
 }
+
 .toggle-eye {
 	align-self: center;
 	margin-left: -30px;
 	cursor: pointer;
-}
-
-#navbarContent .nav-item:last-of-type {
-	margin-left: auto;
-}
-
-.navbar-custom {
-	width:100%;
-}
-
-.login-container {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	width: 100%;
 }
 
 .register-container {
@@ -250,54 +305,8 @@
 	font-size: 20px;
 }
 
-.button-width-150 {
-	width: 150px;
-}
 
-.button-width-180 {
-	width: 180px;
-}
-
-.button-row {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 30px;
-	justify-content: center;
-}
-
-.text-result-summary {
-	align-items: start;
-	display: flex;
-	flex-direction: column;
-	margin-left: 40px;
-}
-
-.title-text-result {
-	text-transform: uppercase;
-	margin-bottom: auto;
-}
-
-.description-text-result{
-	font-size: 12px;
-}
-
-.mark-result {
-	background-color: #50e132;
-	font-weight: bold
-}
-
-.search-results-content {
-	width: 100%;
-	padding-right: 32px;
-	display: flex;
-	flex-direction: column;
-}
-
-.search-results-nocontent {
-	padding-right: 32px;
-}
-
+/*** Register html ***/
 .hide-element-container {
 	display:none;
 }
@@ -312,7 +321,6 @@
 	max-height: 0px;
 }
 
-
 .show-element-container {
 	display: flex;
 	flex-direction: row;
@@ -323,35 +331,88 @@
 	height: 100%;	
 }
 
+/* lastname */
 #lastname-info-container {
-	margin-top: 20px;		
+	height: 72px;
+	max-height: 72px;
+	margin-top: 10px;		
 }
 
+#lastname-info-type {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-top: 16px;
+}
+
+#lastname-info-type > i { 
+	display: flex;
+	flex-direction: column;
+	align-self: self-start;
+	margin-top: 2px;
+}
+
+/* firstname */
 #firstname-info-container {
-	margin-top: 20px;
+	height: 72px;
+	max-height: 72px;
+	margin-top: 10px;
 }
 
+#firstname-info-type {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-top: 16px;
+}
+
+#firstname-info-type > i { 
+	display: flex;
+	flex-direction: column;
+	align-self: self-start;
+	margin-top: 2px;
+}
+
+/* username */
 #username-info-container {
-	margin-top: 20px;
-	height:52px;
+	margin-top: 28px;
+	height:32px;
 }
-
 
 #username-info-container > div >.info-ul {
 	height: 100%;
 	flex-direction: row;
 	align-items: center;
 }
+
+/* password */
 #password-info-container {
 	margin-top: 46px;
+}
+
+/* Confirm password */
+#confirmpassword-info-container {
+	margin-top: 30px;
+	height: 72px;
+	max-height: 72px;
+}
+
+#confirmpassword-info-container > .info-vignette {
+	margin-top: -38px;
+}
+
+#confirmpassword-info-container > div >.info-ul {
+	height: 100%;
+	flex-direction: row;
+	align-items: center;
 }
 
 .info-vignette {
 	background: #dfdfdf none repeat scroll 0 0;
 	transform: rotate(45deg);
-	width: 25px;
+	width: 18px;
 	content: "";
-	height: 25px;
+	height: 18px;
 }
 
 .info {
@@ -380,16 +441,26 @@
 	display: flex;
 }
 
-.invalid-info {
-	color: #d93025;
-}
-
-.valid-info {
-	color: green;
-}
-
 .info-text {
 	padding-left: 8px;
 	font-size: 12px;
 }
+
+
+/*** no more used ***/
+/*.username-error-list {
+	height: 10px;
+	max-height: 10px;
+}*/
+
+/*.username-not-exist {
+	color: #d93025;
+}*/
+
+/*.password-input-container {
+	width: 100%;
+}*/
+
+
+
 

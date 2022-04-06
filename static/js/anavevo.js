@@ -1,107 +1,149 @@
 $(document).ready(function(){
 	
-	//^(?=.{3,29}$)[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$
 	var booDisableButton = false;
 	var booIncorrectLastName = false;
 	var booIncorrectFirstName = false;
 	var booIncorrectPassword = false;
+	var booIncorrectUserName = false;
+	var booIncorrectConfirmPassword = false;
 	var mapBooleans = {
 		"booIncorrectLastName": booIncorrectLastName,
 		"booIncorrectFirstName": booIncorrectFirstName,
-		"booIncorrectPassword": booIncorrectPassword
+		"booIncorrectUserName": booIncorrectUserName,
+		"booIncorrectPassword": booIncorrectPassword,
+		"booIncorrectConfirmPassword": booIncorrectConfirmPassword
 	};
 	
-	$('#lastname-input').keyup(function() {
+	checkDisableLoginButton(mapBooleans);
+	
+	// JQuery sur le lastname
+	$('#lastname-input').focus(function() {
+		$('#lastname-info-container').removeClass('show-element-container').addClass('hide-element-container');
+		$('#lastname-label-input').removeClass('label-input-error');
+		$('#lastname-input').removeClass('style-input-error').addClass('style-input');
+	}).focusout(function() {
+		
 		var strLastnameInput = $(this).val();
-		
-		console.log(strLastnameInput);
+
 		var regexName = /^(?=.{3,29}$)[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/
-		
-		console.log(strLastnameInput.match(regexName));
 		
 		booIncorrectLastName = mapBooleans["booIncorrectLastName"];
 		
-		if (strLastnameInput.match(regexName)) {
-			$('#lastname-info-type').removeClass('invalid-info').addClass('valid-info');
-			$('#lastname-info-type').children('i').removeClass('fa-circle-exclamation').addClass('fa-circle-check');
-			booIncorrectLastName = false;
+		if (strLastnameInput == '') {
+			booIncorrectLastName = true;			
 		} else {
-			$('#lastname-info-type').removeClass('valid-info').addClass('invalid-info');
-			$('#lastname-info-type').children('i').removeClass('fa-circle-check').addClass('fa-circle-exclamation');
-			booIncorrectLastName = true;
+			if (strLastnameInput.match(regexName)) {
+				$('#lastname-info-container').removeClass('show-element-container').addClass('hide-element-container');
+				booIncorrectLastName = false;
+			} else {
+				$('#lastname-info-container').removeClass('hide-element-container').addClass('show-element-container');
+				booIncorrectLastName = true;
+			}
+		}
+		
+		if (booIncorrectLastName == true) {
+			$('#lastname-label-input').addClass('label-input-error');
+			$('#lastname-input').removeClass('style-input').addClass('style-input-error');
+		} else {
+			$('#lastname-label-input').removeClass('label-input-error');
+			$('#lastname-input').removeClass('style-input-error').addClass('style-input');
 		}
 		
 		mapBooleans["booIncorrectLastName"] = booIncorrectLastName;
 		
-		checkDisableLoginButton(mapBooleans);
-		
-	}).focus(function() {
-		//$('#lastname-info-container').removeClass('hide-element-container').addClass('show-element-container');
-	}).blur(function() {
-		//$('#lastname-info-container').removeClass('show-element-container').addClass('hide-element-container');
+		checkDisableLoginButton(mapBooleans);		
 	});
 	
-	$('#firstname-input').keyup(function() {
-		var strFirstnameInput = $(this).val();
+	// JQuery sur le firstname
+	$('#firstname-input').focus(function() {
+		$('#firstname-info-container').removeClass('show-element-container').addClass('hide-element-container');
+		$('#firstname-label-input').removeClass('label-input-error');
+		$('#firstname-input').removeClass('style-input-error').addClass('style-input');
+	}).focusout(function() {
+		
+		var strFirstNameInput = $(this).val();
 		
 		var regexName = /^(?=.{3,29}$)[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/
 		
 		booIncorrectFirstName = mapBooleans["booIncorrectFirstName"];
 		
-		if (strFirstnameInput.match(regexName)) {
-			$('#firstname-info-type').removeClass('invalid-info').addClass('valid-info');
-			$('#firstname-info-type').children('i').removeClass('fa-circle-exclamation').addClass('fa-circle-check');
-			booIncorrectFirstName = false;
+		if (strFirstNameInput == '') {
+			booIncorrectFirstName = true;			
 		} else {
-			$('#firstname-info-type').removeClass('valid-info').addClass('invalid-info');
-			$('#firstname-info-type').children('i').removeClass('fa-circle-check').addClass('fa-circle-exclamation');
-			booIncorrectFirstName = true;
+			if (strFirstNameInput.match(regexName)) {
+				$('#firstname-info-container').removeClass('show-element-container').addClass('hide-element-container');
+				booIncorrectFirstName = false;
+			} else {
+				$('#firstname-info-container').removeClass('hide-element-container').addClass('show-element-container');
+				booIncorrectFirstName = true;
+			}
+		}
+		
+		if (booIncorrectFirstName == true) {
+			$('#firstname-label-input').addClass('label-input-error');
+			$('#firstname-input').removeClass('style-input').addClass('style-input-error');
+		} else {
+			$('#firstname-label-input').removeClass('label-input-error');
+			$('#firstname-input').removeClass('style-input-error').addClass('style-input');
 		}
 		
 		mapBooleans["booIncorrectFirstName"] = booIncorrectFirstName;
 		
 		checkDisableLoginButton(mapBooleans);
-		
-	}).focus(function() {
-		$('#firstname-info-container').removeClass('hide-element-container').addClass('show-element-container');
-	}).blur(function() {
-		$('#firstname-info-container').removeClass('show-element-container').addClass('hide-element-container');
 	});
 	
-	$('#username-input').focusout(function() {
-		var strEmailInput = $(this).val();
-		console.log(strEmailInput);
-		var regexName = /([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+/
+	// JQuery sur le username (email)
+	$('#username-input').focus(function() {
+		$('#username-info-container').removeClass('show-element-container').addClass('hide-element-container');
+		$('#username-label-input').removeClass('label-input-error');
+		$('#username-input').removeClass('style-input-error').addClass('style-input');
+		$('#username-error-list').hide();
+	}).focusout(function() {
+
+		var strUsernameInput = $(this).val();
 		
+		var regexName = /([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+/
+
 		booIncorrectUserName = mapBooleans["booIncorrectUserName"];
 		
-		console.log(strEmailInput.match(regexName));
-		if (strEmailInput.match(regexName)) {
-			$('#username-info-type').removeClass('invalid-info').addClass('valid-info');
-			$('#username-info-type').children('i').removeClass('fa-circle-exclamation').addClass('fa-circle-check');
-			$('#username-info-container').removeClass('show-element-container').addClass('hide-element-container');
-			booIncorrectUserName = false;
-		} else {
-			$('#username-info-type').removeClass('valid-info').addClass('invalid-info');
-			$('#username-info-type').children('i').removeClass('fa-circle-check').addClass('fa-circle-exclamation');
-			$('#username-info-container').removeClass('hide-element-container').addClass('show-element-container');
-			booIncorrectUserName = true;
+		if (strUsernameInput == '') {
+			booIncorrectUserName = true;			
+		} else {			
+			if (strUsernameInput.match(regexName)) {
+				$('#username-info-container').removeClass('show-element-container').addClass('hide-element-container');
+				booIncorrectUserName = false;
+			} else {
+				$('#username-info-container').removeClass('hide-element-container').addClass('show-element-container');
+				booIncorrectUserName = true;
+			}				
 		}
 
+		if (booIncorrectUserName == true) {
+			$('#username-label-input').addClass('label-input-error');
+			$('#username-input').removeClass('style-input').addClass('style-input-error');
+		} else {
+			$('#username-label-input').removeClass('label-input-error');
+			$('#username-input').removeClass('style-input-error').addClass('style-input');
+		}
+		
+		/*var objUserNameErrorList = $('#username-error-list');
+		if (objUserNameErrorList.children().length > 0) {
+			objUserNameErrorList.show();
+			$('#username-label-input').addClass('label-input-error');
+			$('#username-input').removeClass('style-input').addClass('style-input-error');
+		}*/
+		
 		mapBooleans["booIncorrectUserName"] = booIncorrectUserName;
 		
-		checkDisableLoginButton(mapBooleans);
-		
-	}).focus(function() {
-		$('#username-info-container').removeClass('show-element-container').addClass('hide-element-container');
+		checkDisableLoginButton(mapBooleans);		
 	});
 	
-	
+	// JQuery sur le password
 	$('#password-input').keyup(function() {
 		var strPasswordInput = $(this).val();
 		
 		booIncorrectPassword = mapBooleans["booIncorrectPassword"];
-		
+
 		// Password min and max length
 		if (strPasswordInput.length < 8) {
 			$('#password-info-minlength').removeClass('valid-info').addClass('invalid-info');
@@ -168,19 +210,81 @@ $(document).ready(function(){
 			$('#password-info-special').children('i').removeClass('fa-circle-check').addClass('fa-circle-exclamation');
 			booIncorrectPassword = true;
 		}
-		
+			
 		mapBooleans["booIncorrectPassword"] = booIncorrectPassword;
 		
 		checkDisableLoginButton(mapBooleans);		
 		
 	}).focus(function() {
 		$('#password-info-container').removeClass('hide-element-container').addClass('show-element-container');
-	}).blur(function() {
+		$('#password-label-input').removeClass('label-input-error');
+		$('#password-input').removeClass('style-input-error').addClass('style-input');
+	}).focusout(function() {
 		$('#password-info-container').removeClass('show-element-container').addClass('hide-element-container');
+		var strPasswordInput = $(this).val();
+		if (strPasswordInput == '') {
+			booIncorrectPassword = true;
+			mapBooleans["booIncorrectPassword"] = booIncorrectPassword;
+		} else booIncorrectPassword = mapBooleans["booIncorrectPassword"];
+
+		if (booIncorrectPassword == true) {
+			$('#password-label-input').addClass('label-input-error');
+			$('#password-input').removeClass('style-input').addClass('style-input-error');
+		} else {
+			$('#password-label-input').removeClass('label-input-error');
+			$('#password-input').removeClass('style-input-error').addClass('style-input');
+		}
+
+		checkDisableLoginButton(mapBooleans);		
 	});
 	
-	checkDisableLoginButton(mapBooleans);
+	// JQuery sur le confirmpassword
+	$('#confirmpassword-input').focus(function() {
+		$('#confirmpassword-info-container').removeClass('show-element-container').addClass('hide-element-container');
+		$('#confirmpassword-label-input').removeClass('label-input-error');
+		$('#confirmpassword-input').removeClass('style-input-error').addClass('style-input');
+	}).focusout(function() {
+
+		var strConfirmPasswordInput = $(this).val();
+		var strPassword = $('#password-input').val();
+		
+		booIncorrectConfirmPassword = mapBooleans["booIncorrectConfirmPassword"]
+		
+		if (strPassword != '') {
+
+			if (strConfirmPasswordInput != '') {
+				if (strPassword != strConfirmPasswordInput) {
+					$('#confirmpassword-info-container').removeClass('hide-element-container').addClass('show-element-container');
+					booIncorrectConfirmPassword = true;
+				} else {
+					$('#confirmpassword-info-container').removeClass('show-element-container').addClass('hide-element-container');
+					booIncorrectConfirmPassword = false;
+				}
+			} else {
+				booIncorrectConfirmPassword = true;				
+			}
+
+		} else {
+			if (strConfirmPasswordInput == '') booIncorrectConfirmPassword = true;				
+			else booIncorrectConfirmPassword = false;			
+		}
+
+		if (booIncorrectConfirmPassword == true) {
+			$('#confirmpassword-label-input').addClass('label-input-error');
+			$('#confirmpassword-input').removeClass('style-input').addClass('style-input-error');
+		} else {
+			$('#confirmpassword-label-input').removeClass('label-input-error');
+			$('#confirmpassword-input').removeClass('style-input-error').addClass('style-input');
+		}
+		
+		mapBooleans["booIncorrectConfirmPassword"] = booIncorrectConfirmPassword;
+		
+		checkDisableLoginButton(mapBooleans);		
+	});
 	
+
+
+	// Partie sur la page Home pour la recherche plein texte
 	$('#search-input').keyup(function() {
 		
 		var strSearchInput = $(this).val();
@@ -254,6 +358,7 @@ function deleteSearchInput(objElement) {
 	activateElement(objSearchInput);
 }*/
 
+// Fonction pour la page register.html
 function checkDisableLoginButton(mapBooleans) {
 	
 	var booDisableButton = false;
@@ -262,54 +367,16 @@ function checkDisableLoginButton(mapBooleans) {
 	booIncorrectFirstName = mapBooleans["booIncorrectFirstName"];
 	booIncorrectPassword = mapBooleans["booIncorrectPassword"];
 	booIncorrectUserName = mapBooleans["booIncorrectUserName"];
-	
-	if (booIncorrectLastName == false && booIncorrectFirstName == false && booIncorrectUserName == false && booIncorrectPassword == false) booDisableButton = false;
+	booIncorrectConfirmPassword = mapBooleans["booIncorrectConfirmPassword"];
+
+	if (booIncorrectLastName == false && booIncorrectFirstName == false && booIncorrectUserName == false && booIncorrectPassword == false && booIncorrectConfirmPassword == false) booDisableButton = false;
 	else booDisableButton = true;
 
 	if (booDisableButton == true) $('#login-button').attr('disabled', 'true');
 	else $('#login-button').removeAttr('disabled')			
 }
 
-/*$(document).ready(function(){
-	
-
-	
-	$('input[type=password]').keyup(function() {
-		var pswd = $(this).val();
-
-		//validate capital letter
-		if ( pswd.match(/[A-Z]/) ) {
-			$('#capital').removeClass('invalid').addClass('valid');
-		} else {
-			$('#capital').removeClass('valid').addClass('invalid');
-		}
-
-		//validate number
-		if ( pswd.match(/\d/) ) {
-			$('#number').removeClass('invalid').addClass('valid');
-		} else {
-			$('#number').removeClass('valid').addClass('invalid');
-		}
-		
-		//validate space
-		if ( pswd.match(/[^a-zA-Z0-9\-\/]/) ) {
-			$('#space').removeClass('invalid').addClass('valid');
-		} else {
-			$('#space').removeClass('valid').addClass('invalid');
-		}
-		
-		
-		
-	}).focus(function() {
-		$('#pswd_info').show();
-	}).blur(function() {
-		$('#pswd_info').hide();
-	});
-	
-});*/
-
-
-
+// Fonction pour la page library.html
 function showArborescence(ieElement) {
 	
 	var strClassName = ieElement.className;
@@ -342,6 +409,7 @@ function showArborescence(ieElement) {
 	}
 }
 
+// Fonction pour la page home.html
 function showSearchArborescence(ieElement) {
 	
 	var strClassName = ieElement.className;
