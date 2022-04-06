@@ -181,7 +181,78 @@ $(document).ready(function(){
 	
 	checkDisableLoginButton(mapBooleans);
 	
+	$('#search-input').keyup(function() {
+		
+		var strSearchInput = $(this).val();
+		
+		if (strSearchInput == null || strSearchInput == '') {
+			$('#delete-search').removeClass('delete-search-show').addClass('delete-search-hide');		
+		} else {
+			$('#delete-search').removeClass('delete-search-hide').addClass('delete-search-show');
+		}
+	}).focus(function() {
+		var strSearchInput = $(this).val();
+		if (strSearchInput == null || strSearchInput == '') {
+			$('#delete-search').removeClass('delete-search-show').addClass('delete-search-hide');
+		} else {
+			$('#delete-search').removeClass('delete-search-hide').addClass('delete-search-show');
+			//$("#delete-search").focus();
+		}
+		
+	})/*.blur(function() {
+		console.log("coucou");
+		 setTimeout(function() { $("#search-input").focus(); }, 0);
+	})*/.focusout(function() {
+		//$('#delete-search').removeClass('delete-search-show').addClass('delete-search-hide');
+	})/*.mouseenter(function() {
+		$('#delete-search').removeClass('delete-search-hide').addClass('delete-search-show');
+	}).mouseleave(function() {
+		$('#delete-search').removeClass('delete-search-show').addClass('delete-search-hide');
+	})*/;
+	
+	$('#delete-search').click(function() {
+		
+		var objSearchInput = $('#search-input').val();
+		if (objSearchInput == null || objSearchInput == '') {
+			
+		} else {
+			$('#search-input').val('');
+			$("#search-input").focus();
+			//setTimeout(function() { $("#search-input").focus(); }, 0);
+		}		
+	});
+	
 });
+
+/*function activateElement(objElement) {
+	
+	var objSearchInputValue = objElement.value;
+	var elm = document.getElementById('delete-search');
+	if (objSearchInputValue == null || objSearchInputValue == '') {
+		console.log("null");
+		elm.classList.remove('delete-search-show');
+		elm.classList.add('delete-search-hide');
+	} else {
+		console.log("not null");
+		elm.classList.remove('delete-search-hide');
+		elm.classList.add('delete-search-show');
+	}
+}
+
+function desactivateElement(objElement) {
+	
+	console.log(objElement);
+}
+
+function deleteSearchInput(objElement) {
+	
+	var objSearchInput = objElement.previousElementSibling.previousElementSibling;
+	objSearchInput.value = null;
+	var elm = document.getElementById('delete-search');
+	elm.classList.remove('delete-search-show');
+	elm.classList.add('delete-search-hide');
+	activateElement(objSearchInput);
+}*/
 
 function checkDisableLoginButton(mapBooleans) {
 	

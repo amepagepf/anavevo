@@ -5,10 +5,12 @@
 	<!-- Required meta tags -->
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+	<script type="text/javascript" src="{{ static_url('js/jquery/jquery-3.6.0.min.js') }}"></script>
 	<script type="text/javascript" src="{{ static_url('js/anavevo.js') }}"></script>
 	<link rel="stylesheet" href="{{ static_url('css/style.css') }}" />
 	<link rel="stylesheet" href="{{ static_url('css/customstyle.css') }}" />
 	<link rel="icon" type="image/png" href="{{ static_url('img/icon.png') }}" />
+	<link rel="stylesheet" href="{{ static_url('css/fontawesome/css/all.css') }}" />
 	<title>Anavevo</title>
 </head>
 
@@ -55,9 +57,13 @@
 				<div class="search-form">
 					<form method="POST"> {% module xsrf_form_html() %}
 						<div class="d-flex flex-row align-items-center search-input-container">
-							<input type="text" class="style-input" placeholder="Rechercher..." name="search-input-text" value="{% if search_input_text is not None %}{{ search_input_text }}{% end %}">
+							<input id="search-input" type="text" class="style-input" placeholder="Rechercher..." name="search-input-text" value="{% if search_input_text is not None %}{{ search_input_text }}{% end %}">
 							<button type="submit" value="send" class="btn btn-outline-primary btn-lg ms-2 button-width-180" role="button">Recherche</button>
+							<div id="delete-search" class="delete-search-hide">
+								<i class="fa-solid fa-circle-xmark"></i>
+							</div>
 						</div>
+						
 					</form>
 				</div> 
 				{% if search_results is not None %} 

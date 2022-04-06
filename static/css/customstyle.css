@@ -4,7 +4,7 @@
 
 .style-input {
 	border-radius: 6px;
-	padding: .67em;
+	padding: .67em 35px .67em .67em;
 	border: 1px solid #caccce;
 	width: 100%;
 }
@@ -46,6 +46,29 @@
 	display: flex;
 	flex-direction: column;
 	align-items: start;
+}
+
+.search-summary-results {
+	display: flex;
+	flex-direction: column;
+	text-align: left;
+	margin-left: 20px;
+	line-height: 10px;
+}
+
+.delete-search-show {
+	position: absolute;
+	margin-left: 1073px;
+	color: #cbc4c4;
+	cursor: pointer;
+}
+
+.delete-search-hide {
+	position: absolute;
+	margin-left: 1073px;
+	color: #cbc4c4;
+	cursor: pointer;
+	display: none;
 }
 
 .search-results {
