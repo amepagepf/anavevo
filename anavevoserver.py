@@ -49,66 +49,33 @@ path_dbconfig = os.path.join(path_dbconfig, configdb_filename)
 
 path_log = "log/"
 # Define handler files
-handler_access = logging.FileHandler(os.path.join(path_log, "anavevo_access_log.log"))
-handler_application = logging.FileHandler(os.path.join(path_log, "anavevo.log"))
-handler_general = logging.FileHandler(os.path.join(path_log, "anavevo_manager.log"))
+#handler_access = logging.FileHandler(os.path.join(path_log, "anavevo_access_log.log"))
+#handler_application = logging.FileHandler(os.path.join(path_log, "anavevo.log"))
+#handler_general = logging.FileHandler(os.path.join(path_log, "anavevo_manager.log"))
 
 formatter = logging.Formatter('[%(levelname)s] - %(name)s - %(asctime)s : %(message)s')
 
-handler_access.setFormatter(formatter)
-handler_application.setFormatter(formatter)
-handler_general.setFormatter(formatter)
+#handler_access.setFormatter(formatter)
+#handler_application.setFormatter(formatter)
+#handler_general.setFormatter(formatter)
 
 # Define the logger
 access_log = logging.getLogger("tornado.access")
 access_log.setLevel(logging.DEBUG)
-access_log.addHandler(handler_access)
+#access_log.addHandler(handler_access)
 access_log.info('test')
 
 app_log = logging.getLogger("tornado.application")
 app_log.setLevel(logging.DEBUG)
-app_log.addHandler(handler_application)
+#app_log.addHandler(handler_application)
 app_log.info('test')
 
 gen_log = logging.getLogger("tornado.general")
 gen_log.setLevel(logging.DEBUG)
-gen_log.addHandler(handler_general)
+#gen_log.addHandler(handler_general)
 gen_log.info('test')
 
 enable_pretty_logging()
-
-'''
-handler = logging.FileHandler("log_file_filename.log")
-app_log = logging.getLogger("tornado.application")
-enable_pretty_logging()
-app_log.addHandler(handler)
-app_log.info('foo')
-
-
-
-# create logger
-logger = logging.getLogger('simple_example')
-logger.setLevel(logging.DEBUG)
-
-# create console handler and set level to debug
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-
-# create formatter
-formatter = logging.Formatter('[%(levelname)s] - %(name)s - %(asctime)s : %(message)s')
-
-# add formatter to ch
-ch.setFormatter(formatter)
-
-# add ch to logger
-logger.addHandler(ch)
-
-# 'application' code
-logger.debug('debug message')
-logger.info('info message')
-logger.warning('warn message')
-logger.error('error message')
-logger.critical('critical message')'''
 
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
