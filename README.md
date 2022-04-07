@@ -46,14 +46,14 @@ Debian possède en général un package de postgresql, qu'il faudra soit install
 * Installer SSL: python -m pip install pyOpenSSL
 
 ## Configuration du projet:
-* Dans le répertoire Anavevo, éditer le fichier serv.py
+* Dans le répertoire Anavevo, éditer le fichier anavevoserver.py
 * Mettre la bonne valeur du chemin dans les variables path et static_path
 
 ## Lancement du serveur:
 * Se mettre à la racine du projet Anavevo en invite de commandes ou powershell
-* Pour démarrer le serveur, taper la commande : python serv.py 
+* Pour démarrer le serveur, taper la commande : python anavevoserver.py 
 
 ## Utilisation:
-* Se rendre sur l'adresse qui a été configurée, à savoir localhost:8888/home
+* Se rendre sur l'adresse qui a été configurée, à savoir localhost:8888/
 
 
