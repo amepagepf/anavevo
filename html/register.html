@@ -7,6 +7,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 	<script type="text/javascript" src="{{ static_url('js/jquery/jquery-3.6.0.min.js') }}"></script>
 	<script type="text/javascript" src="{{ static_url('js/anavevo.js') }}"></script>
+	<script type="text/javascript" src="{{ static_url('js/anavevoregister.js') }}"></script>
 	<link rel="stylesheet" href="{{ static_url('css/style.css') }}" />
 	<link rel="stylesheet" href="{{ static_url('css/customstyle.css') }}" />
 	<link rel="icon" type="image/png" href="{{ static_url('img/icon.png') }}" />
@@ -57,7 +58,7 @@
 					{% module xsrf_form_html() %}
 					<div class="d-flex flex-column mt-3 element-container">
 						<div class="d-flex flex-column align-items-start input-container">
-							<label id="lastname-label-input" for="lastname-input">Nom : </label>
+							<label id="lastname-label-input" class="{% if dicError is not None and dicError['lastname-errors'] is not None %} label-input-error {% end %}" for="lastname-input">Nom : </label>
 							<input id="lastname-input" class="{% if dicError is not None and dicError['lastname-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="text" placeholder="Nom" name="lastname" value="{% if lastname is not None %}{{ lastname }}{% end %}" required>
 						</div>
 						<div id="lastname-info-container" class="hide-element-container">
@@ -83,7 +84,7 @@
 					</div>
 					<div class="d-flex flex-column mt-3 element-container">
 						<div class="d-flex flex-column align-items-start input-container">
-							<label id="firstname-label-input"for="firstname-input">Prénom : </label>
+							<label id="firstname-label-input" class="{% if dicError is not None and dicError['firstname-errors'] is not None %} label-input-error {% end %}" for="firstname-input">Prénom : </label>
 							<input id="firstname-input" class="{% if dicError is not None and dicError['firstname-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="text" placeholder="Prénom" name="firstname" value="{% if firstname is not None %}{{ firstname }}{% end %}" required>
 						</div>
 						<div id="firstname-info-container" class="hide-element-container">
@@ -135,7 +136,7 @@
 					</div>
 					<div class="d-flex flex-column mt-3 element-container">
 						<div class="d-flex flex-column align-items-start input-container">
-							<label id="password-label-input" for="password-input">Mot de passe : </label>
+							<label id="password-label-input" class="{% if dicError is not None and dicError['password-errors'] is not None %} label-input-error {% end %}" for="password-input">Mot de passe : </label>
 							<div class="password-input">
 								<input id="password-input" class="{% if dicError is not None and dicError['password-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="password" placeholder="Mot de passe" name="password" data-toggle="popover" value="{% if password is not None %}{{ password }}{% end %}" required>
 								<i class="fa-solid fa-eye-slash toggle-eye" onclick="toggleEye(this)" id="togglePassword"></i>
@@ -186,7 +187,7 @@
 					</div>
 					<div class="d-flex flex-column mt-3 element-container">
 						<div class="d-flex flex-column align-items-start input-container">
-							<label id="confirmpassword-label-input" for="confirmpassword-input">Confirmer le mot de passe : </label>
+							<label id="confirmpassword-label-input" class="{% if dicError is not None and dicError['confirmpassword-errors'] is not None %} label-input-error {% end %}" for="confirmpassword-input">Confirmer le mot de passe : </label>
 							<div class="password-input">
 								<input id="confirmpassword-input" class="{% if dicError is not None and dicError['confirmpassword-errors'] is not None %} style-input-error {% else %} style-input {% end %}" type="password" placeholder="Confirmer le mot de passe" name="confirmpassword" value="{% if confirmpassword is not None %}{{ confirmpassword }}{% end %}" required>
 								<i class="fa-solid fa-eye-slash toggle-eye" onclick="toggleEye(this)" id="togglePassword"></i>
