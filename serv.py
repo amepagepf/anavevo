@@ -736,7 +736,7 @@ def setSessionUserId(dicUser):
                     
     # Define the timestamp expiration of the cookie
     datetime_jour = datetime.now() 
-    delta_expiration = timedelta(minutes=5)
+    delta_expiration = timedelta(minutes=60)
     date_expiration = datetime_jour + delta_expiration
 
     # Need to register uuid before using in insert query postgres
@@ -870,7 +870,7 @@ def make_app():
 
     app = tornado.web.Application(handlers=[
         # Les parenthèses dans les regex permettent de délimiter les id qui vont transiter à traver les url
-        (r"/home", HomeHandler),
+        (r"/", HomeHandler),
         (r"/login", LoginHandler),
         (r"/register", RegisterHandler),
         (r"/registered", RegisteredHandler),

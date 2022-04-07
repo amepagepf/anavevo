@@ -20,11 +20,11 @@
 		<div class="container">
 			<div class="row">
 				<nav class="col navbar navbar-expand-lg navbar-dark">
-					<a class="navbar-brand" href={{ str(path_url) + "/home" }}> <img src="{{ static_url('img/icon.png') }}" width="40" height="30" alt="Site logo"> Anavevo </a>
+					<a class="navbar-brand" href={{ str(path_url) + "/" }}> <img src="{{ static_url('img/icon.png') }}" width="40" height="30" alt="Site logo"> Anavevo </a>
 					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button>
 					<div id="navbarContent" class="collapse navbar-collapse">
 						<ul class="navbar-nav navbar-custom">
-							<li class="nav-item active"> <a class="nav-link" href={{ str(path_url) + "/home" }}>Accueil</a> </li>
+							<li class="nav-item active"> <a class="nav-link" href={{ str(path_url) + "/" }}>Accueil</a> </li>
 							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/library" }}>Bibliothèque</a> </li> 
 							{% if label_user is None %}
 							<li class="nav-item"> <a class="nav-link" href={{ str(path_url) + "/login" }}>Se connecter</a> </li> 
@@ -51,7 +51,7 @@
 			<p class="fw-bold display-3">Anavevo</p>
 			<div class="col-md-6 mx-auto">
 				<p class="lead">Inscription terminée</p> 
-				<a href={{ str(path_url) + "/home" }} class="btn btn-outline-primary btn-lg mb-3 button-width-180" role="button">Accueil</a> 
+				<a href={{ str(path_url) + "/" }} class="btn btn-outline-primary btn-lg mb-3 button-width-180" role="button">Accueil</a> 
 			</div>
 		</div>
 	</div>
