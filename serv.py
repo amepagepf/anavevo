@@ -232,8 +232,15 @@ class EssenceHandler(BaseHandler):
 
         strHTMLPath = os.path.join(path_html, "essence.html")
         
+        dicTest = {}
+        dicTest["date"] = 'test'
+        dicTest["file_id"] = idEssence
+        
+        dicTest = json.dumps(dicTest)
+        #pathEssence = pathDirectoryEssence + "/" + str(idEssence) + ".json"
+        
         self.render(strHTMLPath, path_url=path_url, label_user=label_user, dic=dicEssence, idCollection=idCollection, idItem=idItem, 
-        idEssence=idEssence, name=essence, titleCollection=titleCollection, titleItem=titleItem)
+        idEssence=idEssence, name=essence, titleCollection=titleCollection, titleItem=titleItem, dicTest=dicTest)
       
 class LoginHandler(BaseHandler):
 

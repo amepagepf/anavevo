@@ -80,6 +80,12 @@
 					<p class="mt-4">Cette essence ne possède pas de document</p> 
 				{% end %}
 				<h4 class="text-center my-4">- Desciption -</h4>
+				
+				<div id="test">
+					<script>readFile('{{ str(dicTest) }}')</script>
+				</div>
+				
+				
 				<ul class="list-group"> 
 				{% for key in dic.keys() %} 
 					{% if type(dic[key]) == list %} 

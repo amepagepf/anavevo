@@ -141,7 +141,74 @@ function toggleEye(ieElement) {
 	}
 }
 
+var serverName = 'https://v-anavevo.upf.pf/sound';
+//var serverName = 'C:/Projets/anavevo/sound';
+function readFile(strJson){
 
+	strJson = strJson.replace(/&quot;/g, "\"");
 
+	var jsonObj = JSON.parse(""+strJson);
 
+  var date = Date.parse(jsonObj.date);
+  jsonObj.date=jsonObj.date.replace('T',' ');
+  jsonObj.offset=0;
+  var url = serverName + '/read_file.php?action=read_file&infos='+encodeURIComponent(JSON.stringify(jsonObj));
+  console.log(url);
+  if(jsonObj.ogg ==null || jsonObj.ogg==undefined || jsonObj.ogg=='true') {
+
+    //var audioTag = $('#audio_file');
+    var sourceTag = $('<source></source>');
+    sourceTag.attr('id','source_audio');
+    sourceTag.attr('src',url);
+    sourceTag.attr('type','audio/ogg');
+	
+	var audiotg = $('<audio></audio>');
+	audiotg.attr("id", "audio-file");
+	audiotg.attr('controls', '');
+	audiotg.attr('preload', 'metadata');
+	audiotg.attr('controlsList', 'nodownload');
+
+	audiotg.append(sourceTag);
+	
+	console.log(audiotg);
+	
+	$('#test').append(audiotg);
+	
+    //loadingImg();
+  } else {
+    $.ajax({
+      url:url,
+      type:'POST',
+      error: function(err) {
+
+      },
+      success: function(data_base64) {
+        var data = Base64.decode(data_base64);
+        $('#fileContent').html(data);
+      }
+    })
+  }
+}
+
+function loadingImg() {
+  var img = document.getElementById('spinner_audio_img');
+  if(!img) {
+    img = document.createElement('img');
+    img.src = "ducky/resources/images/loading.gif";
+    img.style.height = "16px";
+    img.style.margin = "20px 10px";
+    img.id = "spinner_audio_img";
+
+    $('#audio_file').bind('waiting loadstart', function() {
+      img.style.display ='inline-block';
+    });
+
+    $('#audio_file').bind('play playing canplay canplaythrough loadedstart', function() {
+      img.style.display ='none';
+    });
+
+    var audioTag = document.getElementById('audio_file');
+    audioTag.parentElement.appendChild(img);
+  }
+}
 
