@@ -598,7 +598,7 @@ def setHashedPassword(dicGeneral):
 
     try:
         connection = setConnection()
-        cursor = connection_user.cursor()
+        cursor = connection.cursor()
         displayDatabaseInformation(cursor)
         
         sql_query = "INSERT INTO papareo.user(username, password, firstname, lastname, date_creation, date_creation_timestamp, private_access) "
@@ -617,7 +617,7 @@ def setHashedPassword(dicGeneral):
         if connection:
             cursor.close()
             connection.close()
-            app_log.debug("PostGre connection_user is closed")
+            app_log.debug("PostGre connection is closed")
     
 def checkUserLoginConnexion(dicGeneral):
 
